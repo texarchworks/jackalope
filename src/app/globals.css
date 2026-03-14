@@ -2,56 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: 'DM Sans', -apple-system, sans-serif;
-  background: var(--t-bg, #050507);
-  color: var(--t-text, #F0F0F5);
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--t-bg, #191919);
+  color: var(--t-text, #FFFFFF);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.01em;
   overflow: hidden;
-  transition: background .3s ease, color .3s ease;
+  transition: background .25s ease, color .25s ease;
 }
 
 @keyframes gradientDrift {
   0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(20px, -15px) scale(1.03); }
   100% { transform: translate(0, 0) scale(1); }
 }
 
 @keyframes bubbleFloat {
-  0% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(20px, -30px) scale(1.04); }
-  50% { transform: translate(-15px, 20px) scale(0.96); }
-  75% { transform: translate(10px, -10px) scale(1.02); }
-  100% { transform: translate(0, 0) scale(1); }
+  0% { transform: translate(0, 0); }
+  33% { transform: translate(15px, -20px); }
+  66% { transform: translate(-10px, 15px); }
+  100% { transform: translate(0, 0); }
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--t-border, rgba(255,255,255,.08)); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: var(--t-border, #333); border-radius: 10px; }
 
 input, select, textarea {
-  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-family: 'Inter', -apple-system, sans-serif;
   letter-spacing: -0.01em;
 }
 
 code, .mono {
-  font-family: 'Space Mono', monospace;
-  letter-spacing: -0.03em;
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: var(--t-accent, #3B82F6) !important;
+  border-color: #2F80ED !important;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(59,130,246,.15), 0 0 20px rgba(59,130,246,.08);
+  box-shadow: 0 0 0 2px rgba(47,128,237,.15);
 }
 
-button { transition: all 0.15s ease; }
+button { transition: all 0.12s ease; }
 button:active { transform: scale(0.98); }
-::selection { background: var(--t-accent, #3B82F6); color: white; }
+::selection { background: #2F80ED; color: white; }
