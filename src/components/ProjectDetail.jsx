@@ -291,7 +291,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
     </div>
     {p.locs.length>0&&<div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
       <button onClick={()=>setSL("all")} style={{padding:"5px 10px",borderRadius:6,border:`1px solid ${T.border}`,cursor:"pointer",fontSize:12,fontWeight:500,background:sL==="all"?T.text:T.bgElevated,color:sL==="all"?T.bg:T.textSecondary}}>All {p.locLabel}s</button>
-      {p.locs.map((l)=><button key={l.id} onClick={()=>setSL(l.id)} style={{padding:"5px 10px",borderRadius:6,border:`1px solid ${sL===l.id?l.accent:T.border}`,cursor:"pointer",fontSize:12,fontWeight:500,background:sL===l.id?l.color:"rgba(20,20,29,.5)",color:sL===l.id?"white":T.textSecondary}}><span style={{width:7,height:7,borderRadius:"50%",background:l.accent,display:"inline-block",marginRight:4}} />{l.id}{lSt.find((s)=>s.id===l.id)?.tot>0&&<span style={{marginLeft:4,background:"rgba(255,255,255,.15)",borderRadius:8,padding:"0 5px",fontSize:10}}>{lSt.find((s)=>s.id===l.id)?.tot}</span>}</button>)}
+      {p.locs.map((l)=><button key={l.id} onClick={()=>setSL(l.id)} style={{padding:"5px 10px",borderRadius:6,border:`1px solid ${sL===l.id?l.accent:T.border}`,cursor:"pointer",fontSize:12,fontWeight:500,background:sL===l.id?l.color:T.bgElevated,color:sL===l.id?"white":T.textSecondary}}><span style={{width:7,height:7,borderRadius:"50%",background:l.accent,display:"inline-block",marginRight:4}} />{l.id}{lSt.find((s)=>s.id===l.id)?.tot>0&&<span style={{marginLeft:4,background:"rgba(255,255,255,.15)",borderRadius:8,padding:"0 5px",fontSize:10}}>{lSt.find((s)=>s.id===l.id)?.tot}</span>}</button>)}
     </div>}
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -330,7 +330,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
             const children=childMap[task.id]||[];
             return(<div key={task.id} draggable onDragStart={()=>setDrag(task)} onDragEnd={()=>setDrag(null)} onClick={()=>setExpandCard(task.id)} style={{background:T.bgElevated,border:`1px solid ${T.border}`,borderLeft:`3px solid ${pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer"}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg="#374151" fg="#E0E0E8" title={sub.name}>{sub.id}</Tg>}<Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg>{task.source==="meeting"&&<Tg bg="#FAF5FF" fg="#9333EA">✦</Tg>}<CatTags cat={task.category}/></div>
+                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary} title={sub.name}>{sub.id}</Tg>}<Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg>{task.source==="meeting"&&<Tg bg="#FAF5FF" fg="#9333EA">✦</Tg>}<CatTags cat={task.category}/></div>
                 <div style={{display:"flex",gap:3}}>
                   {permissions.canCreate&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}
                   <button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Edit">✎</button>
@@ -359,7 +359,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
             const children=childMap[task.id]||[];
             return(<div key={task.id} draggable onDragStart={()=>setDrag(task)} onDragEnd={()=>setDrag(null)} onClick={()=>setExpandCard(task.id)} style={{background:T.bgElevated,border:`1px solid ${cfg.color}33`,borderLeft:`3px solid ${sta.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg="#374151" fg="#E0E0E8" title={sub.name}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg>{task.source==="meeting"&&<Tg bg="#FAF5FF" fg="#9333EA">✦</Tg>}<CatTags cat={task.category}/></div>
+                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary} title={sub.name}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg>{task.source==="meeting"&&<Tg bg="#FAF5FF" fg="#9333EA">✦</Tg>}<CatTags cat={task.category}/></div>
                 <div style={{display:"flex",gap:3}}>
                   {permissions.canCreate&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}
                   <button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Edit">✎</button>
@@ -390,7 +390,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
               {col.map((task)=>{const loc=p.locs.find((l)=>l.id===task.loc),pr=PRI[task.priority],sta=STA[task.status],sub=task.sub?allSubs.find((s)=>s.id===task.sub):null;const children=childMap[task.id]||[];
               return(<div key={task.id} onClick={()=>setExpandCard(task.id)} style={{background:T.bgElevated,border:`1px solid ${T.border}`,borderLeft:`3px solid ${pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg="#374151" fg="#E0E0E8">{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
+                  <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
                   <div style={{display:"flex",gap:3}}>{permissions.canCreate&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}<button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Edit">✎</button>{(permissions.isAdmin||isPM)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}</div>
                 </div>
                 <div style={{fontSize:12,fontWeight:500,lineHeight:1.3,marginBottom:4}}>{task.title}</div>
@@ -411,7 +411,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
             {col.map((task)=>{const a=tm.find((m)=>m.id===task.assignee),pr=PRI[task.priority],sta=STA[task.status],sub=task.sub?allSubs.find((s)=>s.id===task.sub):null;const children=childMap[task.id]||[];
             return(<div key={task.id} onClick={()=>setExpandCard(task.id)} style={{background:T.bgElevated,border:`1px solid ${T.border}`,borderLeft:`3px solid ${pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{sub&&<Tg bg="#374151" fg="#E0E0E8">{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
+                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
                 <div style={{display:"flex",gap:3}}>{permissions.canCreate&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}<button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Edit">✎</button>{(permissions.isAdmin||isPM)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}</div>
               </div>
               <div style={{fontSize:12,fontWeight:500,lineHeight:1.3,marginBottom:4}}>{task.title}</div>
@@ -456,9 +456,9 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
       </tr></thead><tbody>
         {sortByList(fil).map((task)=>{const loc=p.locs.find((l)=>l.id===task.loc),a=tm.find((m)=>m.id===task.assignee),pr=PRI[task.priority],sta=STA[task.status],sub=task.sub?allSubs.find((x)=>x.id===task.sub):null;
         const children=childMap[task.id]||[];
-        return(<><tr key={task.id} style={{borderBottom:`1px solid ${T.borderSubtle}`,cursor:"pointer"}} onClick={()=>setExpandCard(task.id)} onMouseEnter={(e)=>e.currentTarget.style.background="rgba(20,20,29,.5)"} onMouseLeave={(e)=>e.currentTarget.style.background="transparent"}>
+        return(<><tr key={task.id} style={{borderBottom:`1px solid ${T.borderSubtle}`,cursor:"pointer"}} onClick={()=>setExpandCard(task.id)} >
           <td style={{padding:"8px 12px"}}>{loc?<span style={{padding:"2px 8px",borderRadius:4,fontSize:11,fontWeight:600,background:loc.color,color:"white"}}>{task.loc}</span>:"—"}</td>
-          <td style={{padding:"8px 12px"}}>{sub?<span style={{fontSize:10,color:T.text,background:"#374151",padding:"2px 5px",borderRadius:3}}>{sub.id}</span>:"—"}</td>
+          <td style={{padding:"8px 12px"}}>{sub?<span style={{fontSize:10,color:T.text,background:T.borderSubtle,padding:"2px 5px",borderRadius:3}}>{sub.id}</span>:"—"}</td>
           <td style={{padding:"8px 12px",fontSize:12,fontWeight:500,maxWidth:280}}>
             <div style={{display:"flex",alignItems:"center",gap:4}}>
               {children.length>0&&<button onClick={(e)=>{e.stopPropagation();setCollapsedRows((r)=>({...r,[task.id]:!r[task.id]}));}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,padding:"0 2px",width:16,flexShrink:0,transition:"transform .15s",transform:collapsedRows[task.id]?"rotate(-90deg)":"rotate(0deg)"}}>▼</button>}
@@ -496,7 +496,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         {!collapsedRows[task.id]&&children.map((ch)=>{const cLoc=p.locs.find((l)=>l.id===ch.loc),cA=tm.find((m)=>m.id===ch.assignee),cPr=PRI[ch.priority],cSta=STA[ch.status],cSub=ch.sub?allSubs.find((x)=>x.id===ch.sub):null;
         return(<tr key={ch.id} style={{borderBottom:`1px solid ${T.borderSubtle}`,cursor:"pointer",background:T.bgSubRow,opacity:ch.status==="resolved"?0.5:1}} onClick={()=>setExpandCard(ch.id)} onMouseEnter={(e)=>{e.currentTarget.style.background=T.bgHover;e.currentTarget.style.opacity="1";}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgSubRow;e.currentTarget.style.opacity=ch.status==="resolved"?"0.5":"1";}}>
           <td style={{padding:"6px 12px 6px 24px"}}>{cLoc?<span style={{padding:"1px 6px",borderRadius:3,fontSize:10,fontWeight:600,background:cLoc.color,color:"white"}}>{ch.loc}</span>:"—"}</td>
-          <td style={{padding:"6px 12px"}}>{cSub?<span style={{fontSize:9,color:T.text,background:"#374151",padding:"1px 4px",borderRadius:3}}>{cSub.id}</span>:"—"}</td>
+          <td style={{padding:"6px 12px"}}>{cSub?<span style={{fontSize:9,color:T.text,background:T.borderSubtle,padding:"1px 4px",borderRadius:3}}>{cSub.id}</span>:"—"}</td>
           <td style={{padding:"6px 12px",fontSize:11,fontWeight:400,maxWidth:280,color:T.textSecondary}}><span style={{color:T.textDim,marginRight:6}}>↳</span>{ch.title}</td>
           <td style={{padding:"6px 6px"}} onClick={(e)=>e.stopPropagation()}>
             <select value={ch.priority} onChange={(e)=>onUpdateTask(ch.id,{priority:e.target.value})} style={{background:cPr.bg,color:cPr.color,border:"none",borderRadius:3,padding:"2px 5px",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:F,outline:"none"}}>
@@ -782,7 +782,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         <div style={{flex:1}}>
           <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
             {loc&&<Tg bg={loc.color} fg="white">{p.locLabel} {task.loc} – {loc.name}</Tg>}
-            {sub&&<Tg bg="#374151" fg="#E0E0E8">{p.subLabel} {sub.id}: {sub.name}</Tg>}
+            {sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary}>{p.subLabel} {sub.id}: {sub.name}</Tg>}
             <Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg>
             <Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg>
             {task.source&&task.source!=="manual"&&<Tg bg="#FAF5FF" fg="#9333EA">✦ {task.source}</Tg>}
