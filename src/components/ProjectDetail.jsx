@@ -101,6 +101,9 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
   const [editSub, setEditSub] = useState(null); // {code, name, _origCode, _locCode}
   const [expandCard, setExpandCard] = useState(null); // task id for expanded card modal
   const [addSubForBoard, setAddSubForBoard] = useState(null); // parent task id for adding sub-task from board
+  const [inlineNew, setInlineNew] = useState(false);
+  const [inlineTask, setInlineTask] = useState({ title: "", loc: p.locs[0]?.id || "", sub: "", priority: "medium", status: "open", assignee: null, category: "", dueDate: "" });
+  const submitInline = async () => { if (!inlineTask.title.trim()) return; await onCreateTask({ ...inlineTask, notes: "", source: "manual" }); setInlineTask({ title: "", loc: p.locs[0]?.id || "", sub: "", priority: "medium", status: "open", assignee: null, category: "", dueDate: "" }); };
   const [deleteConfirm, setDeleteConfirm] = useState(null); // {taskId, title, hasChildren, childCount}
   const [listSort, setListSort] = useState({ col: "priority", dir: "asc" });
   const [collapsedRows, setCollapsedRows] = useState({});
@@ -521,7 +524,28 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
           </td>
         </tr>);})}
         </>);})}
-      </tbody></table></div>}
+        {/* Inline new task row */}
+        {permissions.canCreate&&inlineNew&&<tr style={{borderBottom:`1px solid ${T.borderSubtle}`,background:T.bgElevated}}>
+          <td style={{padding:"6px 8px"}}><select value={inlineTask.loc} onChange={(e)=>setInlineTask({...inlineTask,loc:e.target.value,sub:""})} style={{background:"transparent",color:T.text,border:`1px solid ${T.border}`,borderRadius:4,padding:"3px 6px",fontSize:10,cursor:"pointer",fontFamily:F,outline:"none",maxWidth:80}}>{p.locs.map((l)=><option key={l.id} value={l.id}>{l.id}</option>)}</select></td>
+          <td style={{padding:"6px 8px"}}><select value={inlineTask.sub} onChange={(e)=>setInlineTask({...inlineTask,sub:e.target.value})} style={{background:"transparent",color:T.text,border:`1px solid ${T.border}`,borderRadius:4,padding:"3px 6px",fontSize:10,cursor:"pointer",fontFamily:F,outline:"none",maxWidth:80}}><option value="">—</option>{(p.subs[inlineTask.loc]||[]).map((s)=><option key={s.id} value={s.id}>{s.id}</option>)}</select></td>
+          <td style={{padding:"6px 8px"}}><input value={inlineTask.title} onChange={(e)=>setInlineTask({...inlineTask,title:e.target.value})} onKeyDown={(e)=>{if(e.key==="Enter")submitInline();if(e.key==="Escape"){setInlineNew(false);}}} placeholder="Task title…" autoFocus style={{background:"transparent",border:"none",outline:"none",color:T.text,fontSize:12,fontWeight:500,width:"100%",fontFamily:F,padding:0}} /></td>
+          <td style={{padding:"6px 6px"}}><select value={inlineTask.priority} onChange={(e)=>setInlineTask({...inlineTask,priority:e.target.value})} style={{background:PRI[inlineTask.priority].bg,color:PRI[inlineTask.priority].color,border:"none",borderRadius:4,padding:"3px 6px",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:F,outline:"none"}}>{Object.entries(PRI).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></td>
+          <td style={{padding:"6px 6px"}}><select value={inlineTask.status} onChange={(e)=>setInlineTask({...inlineTask,status:e.target.value})} style={{background:STA[inlineTask.status].bg,color:STA[inlineTask.status].color,border:"none",borderRadius:4,padding:"3px 6px",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:F,outline:"none"}}>{Object.entries(STA).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></td>
+          <td style={{padding:"6px 6px"}}><select value={inlineTask.assignee||""} onChange={(e)=>setInlineTask({...inlineTask,assignee:e.target.value||null})} style={{background:"transparent",color:T.text,border:`1px solid ${T.border}`,borderRadius:4,padding:"3px 6px",fontSize:10,cursor:"pointer",fontFamily:F,outline:"none",maxWidth:120}}><option value="">Unassigned</option>{tm.map((m)=><option key={m.id} value={m.id}>{m.name}</option>)}</select></td>
+          <td style={{padding:"6px 8px"}}><span style={{fontSize:9,color:T.textDim}}>—</span></td>
+          <td style={{padding:"6px 8px"}}><input type="date" value={inlineTask.dueDate} onChange={(e)=>setInlineTask({...inlineTask,dueDate:e.target.value})} style={{background:"transparent",border:`1px solid ${T.border}`,borderRadius:4,color:T.text,fontSize:10,fontFamily:F,outline:"none",padding:"2px 4px"}} /></td>
+          <td style={{padding:"6px 8px"}}><div style={{display:"flex",gap:4}}>
+            <button onClick={submitInline} style={{background:T.text,color:T.bg,border:"none",borderRadius:4,cursor:"pointer",fontSize:10,padding:"3px 8px",fontWeight:600,fontFamily:F}}>Add</button>
+            <button onClick={()=>setInlineNew(false)} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,fontFamily:F}}>✕</button>
+          </div></td>
+        </tr>}
+      </tbody></table>
+      {/* Notion-style + New button */}
+      {permissions.canCreate&&!inlineNew&&<div onClick={()=>setInlineNew(true)} style={{padding:"10px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:6,color:T.textMuted,fontSize:13,borderTop:`1px solid ${T.border}`,transition:"all .12s"}} onMouseEnter={(e)=>{e.currentTarget.style.background=T.bgHover;e.currentTarget.style.color=T.text;}} onMouseLeave={(e)=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.textMuted;}}>
+        <span style={{width:18,height:18,borderRadius:4,border:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>+</span>
+        New
+      </div>}
+    </div>}
 
     {vw==="canvas"&&<TaskCanvas project={p} onCreateTask={onCreateTask} onUpdateTask={onUpdateTask} onDeleteTask={onDeleteTask} onEditTask={opnE} onReload={onReload} isPM={isPM} permissions={permissions} filters={{priority:fP,status:fS,assignee:fA,subLoc:fSub}} theme={T} />}
 
