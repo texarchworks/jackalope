@@ -8,8 +8,8 @@ import ProjectsHome from "@/components/ProjectsHome";
 import ProjectDetail from "@/components/ProjectDetail";
 import OrgTeam from "@/components/OrgTeam";
 
-const M = "'Space Mono', monospace";
-const F = "'DM Sans', -apple-system, sans-serif";
+const M = "'IBM Plex Mono', monospace";
+const F = "'Inter', -apple-system, sans-serif";
 const bs = { padding: "8px 16px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, transition: "all .15s", fontFamily: F, letterSpacing: "-0.01em" };
 
 export default function AppShell() {
@@ -65,10 +65,10 @@ export default function AppShell() {
     try {
       const { data, error } = await supabase.from("profiles").select("*").eq("id", uid).single();
       if (error) console.error("Profile load error:", error);
-      setProfile(data || { id: uid, name: "User", role: "", color: "#3B82F6" });
+      setProfile(data || { id: uid, name: "User", role: "", color: "#2F80ED" });
     } catch (err) {
       console.error("Profile fetch failed:", err);
-      setProfile({ id: uid, name: "User", role: "", color: "#3B82F6" });
+      setProfile({ id: uid, name: "User", role: "", color: "#2F80ED" });
     }
     setLoading(false);
   };
@@ -142,14 +142,14 @@ export default function AppShell() {
           subLabel: p.sub_label || "Building",
           icon: p.icon || p.name.substring(0, 2).toUpperCase(),
           locs: (locs || []).map((l) => ({
-            id: l.code, name: l.name, color: l.color || "#3B82F6",
+            id: l.code, name: l.name, color: l.color || "#2F80ED",
             accent: l.accent || "#5FA8D3", desc: l.description || "",
           })),
           subs,
           cats: (cats || []).map((c) => c.name),
           team: (members || []).map((m) => ({
             id: m.profiles?.id, name: m.profiles?.name, role: m.profiles?.role,
-            color: m.profiles?.color || "#3B82F6", memberRole: m.role,
+            color: m.profiles?.color || "#2F80ED", memberRole: m.role,
             is_external: m.profiles?.is_external || false, company: m.profiles?.company || "",
           })),
           tasks: (tasks || []).map((t) => ({
@@ -367,7 +367,7 @@ export default function AppShell() {
         name: proj.name,
         subtitle: proj.subtitle || "",
         icon: proj.icon || proj.name.substring(0, 2).toUpperCase(),
-        color: proj.color || "#3B82F6",
+        color: proj.color || "#2F80ED",
         loc_label: proj.locLabel || "Zone",
         sub_label: proj.subLabel || "Building",
         created_by: user.id,
@@ -402,7 +402,7 @@ export default function AppShell() {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "transparent" }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ width: 48, height: 48, background: "#3B82F6", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 20, color: "#050507", margin: "0 auto 16px" }}>J</div>
+          <div style={{ width: 48, height: 48, background: "#2F80ED", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 20, color: "#050507", margin: "0 auto 16px" }}>J</div>
           <div style={{ color: "#5E5E72", fontSize: 14 }}>Loading…</div>
         </div>
       </div>
@@ -414,7 +414,7 @@ export default function AppShell() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "transparent" }}>
         <div style={{ width: 400, background: "rgba(15,15,22,.75)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 16, padding: "32px 36px", boxShadow: "0 24px 80px rgba(0,0,0,.5)" }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <div style={{ width: 52, height: 52, background: "#3B82F6", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 22, color: "#050507", margin: "0 auto 12px" }}>J</div>
+            <div style={{ width: 52, height: 52, background: "#2F80ED", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 22, color: "#050507", margin: "0 auto 12px" }}>J</div>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Jackalope</h1>
             <p style={{ margin: "4px 0 0", fontSize: 13, color: "#5E5E72" }}>Architectural Project Management</p>
           </div>
@@ -455,7 +455,7 @@ export default function AppShell() {
                 style={{ width: "100%", background: "rgba(20,20,29,.5)", border: "1px solid #252535", borderRadius: 8, padding: "10px 14px", color: "#F0F0F5", fontSize: 13, outline: "none" }} />
             </div>
             {loginError && <div style={{ background: "#451a1a", border: "1px solid #7f1d1d", borderRadius: 6, padding: "8px 12px", fontSize: 12, color: "#FCA5A5" }}>{loginError}</div>}
-            <button type="submit" style={{ ...bs, background: "#3B82F6", color: "white", width: "100%", padding: "12px", fontSize: 14, fontWeight: 600 }}>
+            <button type="submit" style={{ ...bs, background: "#2F80ED", color: "white", width: "100%", padding: "12px", fontSize: 14, fontWeight: 600 }}>
               {signupMode ? "Create Account" : "Sign In"}
             </button>
           </form>
@@ -504,7 +504,7 @@ export default function AppShell() {
       <aside style={{ width: 240, background: T.bgSidebar, backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", flexShrink: 0, height: "100vh", position: "sticky", top: 0, zIndex: 2 }}>
         <div style={{ padding: "20px 18px 16px", borderBottom: `1px solid ${T.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 34, height: 34, background: "#3B82F6", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, color: "#050507", letterSpacing: "-0.04em" }}>J</div>
+            <div style={{ width: 34, height: 34, background: "#2F80ED", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, color: "#050507", letterSpacing: "-0.04em" }}>J</div>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: "-.01em" }}>Jackalope</div>
               <div style={{ fontSize: 10, color: "#5E5E72", fontFamily: M }}>TEXARCHWORKS</div>
@@ -534,7 +534,7 @@ export default function AppShell() {
         {/* User info + logout */}
         <div style={{ padding: "12px 10px", borderTop: `1px solid ${T.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px" }}>
-            <div style={{ width: 30, height: 30, borderRadius: "50%", background: profile?.color || "#3B82F6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "white" }}>{av(profile?.name || "U")}</div>
+            <div style={{ width: 30, height: 30, borderRadius: "50%", background: profile?.color || "#2F80ED", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "white" }}>{av(profile?.name || "U")}</div>
             <div style={{ flex: 1, overflow: "hidden" }}>
               <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{profile?.name || "User"}</div>
               <div style={{ fontSize: 10, color: "#5E5E72" }}>{profile?.role || ""}</div>
@@ -586,7 +586,7 @@ export default function AppShell() {
         {page === "project" && !curProj && (
           <div style={{ color: "#5E5E72", padding: 40, textAlign: "center" }}>
             Project not found.{" "}
-            <button onClick={() => setPage("projects")} style={{ color: "#3B82F6", background: "none", border: "none", cursor: "pointer", fontFamily: F }}>
+            <button onClick={() => setPage("projects")} style={{ color: "#2F80ED", background: "none", border: "none", cursor: "pointer", fontFamily: F }}>
               View all projects
             </button>
           </div>
