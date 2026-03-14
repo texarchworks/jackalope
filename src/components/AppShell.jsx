@@ -432,24 +432,24 @@ export default function AppShell() {
                 <div>
                   <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#5E5E72", textTransform: "uppercase", marginBottom: 6, fontFamily: M }}>Full Name</label>
                   <input value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="R. Castillo" required
-                    style={{ width: "100%", background: "#14141D", border: "1px solid #252535", borderRadius: 8, padding: "10px 14px", color: "#F0F0F5", fontSize: 13, outline: "none" }} />
+                    style={{ width: "100%", background: "rgba(20,20,29,.5)", border: "1px solid #252535", borderRadius: 8, padding: "10px 14px", color: "#F0F0F5", fontSize: 13, outline: "none" }} />
                 </div>
                 <div>
                   <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#5E5E72", textTransform: "uppercase", marginBottom: 6, fontFamily: M }}>Role / Title</label>
                   <input value={signupRole} onChange={(e) => setSignupRole(e.target.value)} placeholder="Project Director"
-                    style={{ width: "100%", background: "#14141D", border: "1px solid #252535", borderRadius: 8, padding: "10px 14px", color: "#F0F0F5", fontSize: 13, outline: "none" }} />
+                    style={{ width: "100%", background: "rgba(20,20,29,.5)", border: "1px solid #252535", borderRadius: 8, padding: "10px 14px", color: "#F0F0F5", fontSize: 13, outline: "none" }} />
                 </div>
               </>
             )}
             <div>
               <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#5E5E72", textTransform: "uppercase", marginBottom: 6, fontFamily: M }}>Email</label>
               <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="you@texarchworks.com" required
-                style={{ width: "100%", background: "#14141D", border: "1px solid #252535", borderRadius: 8, padding: "10px 14px", color: "#F0F0F5", fontSize: 13, outline: "none" }} />
+                style={{ width: "100%", background: "rgba(20,20,29,.5)", border: "1px solid #252535", borderRadius: 8, padding: "10px 14px", color: "#F0F0F5", fontSize: 13, outline: "none" }} />
             </div>
             <div>
               <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#5E5E72", textTransform: "uppercase", marginBottom: 6, fontFamily: M }}>Password</label>
               <input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} placeholder="••••••••" required minLength={6}
-                style={{ width: "100%", background: "#14141D", border: "1px solid #252535", borderRadius: 8, padding: "10px 14px", color: "#F0F0F5", fontSize: 13, outline: "none" }} />
+                style={{ width: "100%", background: "rgba(20,20,29,.5)", border: "1px solid #252535", borderRadius: 8, padding: "10px 14px", color: "#F0F0F5", fontSize: 13, outline: "none" }} />
             </div>
             {loginError && <div style={{ background: "#451a1a", border: "1px solid #7f1d1d", borderRadius: 6, padding: "8px 12px", fontSize: 12, color: "#FCA5A5" }}>{loginError}</div>}
             <button type="submit" style={{ ...bs, background: "#3B82F6", color: "white", width: "100%", padding: "12px", fontSize: 14, fontWeight: 600 }}>
@@ -484,7 +484,7 @@ export default function AppShell() {
         <nav style={{ flex: 1, padding: "12px 10px", overflowY: "auto" }}>
           {[{ id: "mywork", label: "My Work", icon: "◐" }, { id: "projects", label: "Projects", icon: "▣" }, { id: "team", label: "Team", icon: "◉" }].map((n) => (
             <button key={n.id} onClick={() => { setPage(n.id); setCurProjId(null); }}
-              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: page === n.id ? 600 : 400, background: page === n.id ? "#14141D" : "transparent", color: page === n.id ? "#F0F0F5" : "#5E5E72", marginBottom: 4, textAlign: "left", fontFamily: F }}>
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: page === n.id ? 600 : 400, background: page === n.id ? "rgba(20,20,29,.6)" : "transparent", color: page === n.id ? "#F0F0F5" : "#5E5E72", marginBottom: 4, textAlign: "left", fontFamily: F }}>
               <span style={{ fontSize: 14 }}>{n.icon}</span>{n.label}
             </button>
           ))}
@@ -492,7 +492,7 @@ export default function AppShell() {
           <div style={{ fontSize: 10, color: "#3A3A48", textTransform: "uppercase", fontFamily: M, padding: "16px 12px 6px", letterSpacing: ".08em" }}>Projects</div>
           {projects.map((p) => (
             <button key={p.id} onClick={() => goProj(p.id)}
-              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12, fontWeight: curProjId === p.id && page === "project" ? 600 : 400, background: curProjId === p.id && page === "project" ? "#14141D" : "transparent", color: curProjId === p.id && page === "project" ? "#F0F0F5" : "#5E5E72", marginBottom: 2, textAlign: "left", fontFamily: F }}>
+              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12, fontWeight: curProjId === p.id && page === "project" ? 600 : 400, background: curProjId === p.id && page === "project" ? "rgba(20,20,29,.6)" : "transparent", color: curProjId === p.id && page === "project" ? "#F0F0F5" : "#5E5E72", marginBottom: 2, textAlign: "left", fontFamily: F }}>
               <div style={{ width: 22, height: 22, borderRadius: 5, background: p.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "white", flexShrink: 0 }}>{p.icon}</div>
               <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
               <span style={{ marginLeft: "auto", fontSize: 10, color: "#3A3A48", fontFamily: M }}>{p.tasks.filter((t) => t.status !== "resolved").length}</span>
@@ -509,7 +509,7 @@ export default function AppShell() {
               <div style={{ fontSize: 10, color: "#5E5E72" }}>{profile?.role || ""}</div>
             </div>
           </div>
-          <button onClick={handleLogout} style={{ ...bs, background: "#14141D", color: "#5E5E72", width: "100%", marginTop: 4, fontSize: 11 }}>Sign Out</button>
+          <button onClick={handleLogout} style={{ ...bs, background: "rgba(20,20,29,.5)", color: "#5E5E72", width: "100%", marginTop: 4, fontSize: 11 }}>Sign Out</button>
         </div>
       </aside>
 
