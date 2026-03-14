@@ -518,7 +518,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         </>);})}
       </tbody></table></div>}
 
-    {vw==="canvas"&&<TaskCanvas project={p} onCreateTask={onCreateTask} onUpdateTask={onUpdateTask} onDeleteTask={onDeleteTask} onEditTask={opnE} onReload={onReload} isPM={isPM} permissions={permissions} filters={{priority:fP,status:fS,assignee:fA,subLoc:fSub}} />}
+    {vw==="canvas"&&<TaskCanvas project={p} onCreateTask={onCreateTask} onUpdateTask={onUpdateTask} onDeleteTask={onDeleteTask} onEditTask={opnE} onReload={onReload} isPM={isPM} permissions={permissions} filters={{priority:fP,status:fS,assignee:fA,subLoc:fSub}} theme={T} />}
 
     </div>{/* END SCROLLABLE CONTENT */}
 
