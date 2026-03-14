@@ -1,22 +1,35 @@
+// ROYGBIV semantic colors - same in both themes
+export const COLORS = {
+  red: "#E03E3E",
+  orange: "#D9730D",
+  yellow: "#DFAB01",
+  green: "#0F7B6C",
+  blue: "#2F80ED",
+  indigo: "#6940A5",
+  violet: "#AD1A72",
+  gray: "#888888",
+  black: "#000000",
+  white: "#FFFFFF",
+};
+
 export const PRIORITIES = {
-  critical: { label: "Critical", color: "#DC2626", bg: "#FEF2F2" },
-  high: { label: "High", color: "#EA580C", bg: "#FFF7ED" },
-  medium: { label: "Medium", color: "#CA8A04", bg: "#FEFCE8" },
-  low: { label: "Low", color: "#16A34A", bg: "#F0FDF4" },
+  critical: { label: "Critical", color: COLORS.red, bg: "rgba(224,62,62,.12)" },
+  high: { label: "High", color: COLORS.orange, bg: "rgba(217,115,13,.12)" },
+  medium: { label: "Medium", color: COLORS.yellow, bg: "rgba(223,171,1,.12)" },
+  low: { label: "Low", color: COLORS.green, bg: "rgba(15,123,108,.12)" },
 };
 
 export const STATUSES = {
-  open: { label: "Open", color: "#DC2626", bg: "#FEF2F2" },
-  in_progress: { label: "In Progress", color: "#2563EB", bg: "#EFF6FF" },
-  review: { label: "Under Review", color: "#9333EA", bg: "#FAF5FF" },
-  resolved: { label: "Resolved", color: "#16A34A", bg: "#F0FDF4" },
-  blocked: { label: "Blocked", color: "#1F2937", bg: "#F3F4F6" },
+  open: { label: "Open", color: COLORS.red, bg: "rgba(224,62,62,.12)" },
+  in_progress: { label: "In Progress", color: COLORS.blue, bg: "rgba(47,128,237,.12)" },
+  review: { label: "Under Review", color: COLORS.indigo, bg: "rgba(105,64,165,.12)" },
+  resolved: { label: "Resolved", color: COLORS.green, bg: "rgba(15,123,108,.12)" },
+  blocked: { label: "Blocked", color: COLORS.gray, bg: "rgba(136,136,136,.12)" },
 };
 
 export const TEAM_COLORS = [
-  "#1B4965", "#6B2737", "#2D6A4F", "#7B2D8E", "#B45309", "#1E3A5F",
-  "#9B2226", "#3D5A80", "#065F46", "#7C3AED", "#BE185D", "#92400E",
-  "#0E7490", "#4338CA",
+  "#E03E3E", "#D9730D", "#DFAB01", "#0F7B6C", "#2F80ED", "#6940A5", "#AD1A72",
+  "#2F80ED", "#0F7B6C", "#D9730D", "#6940A5", "#E03E3E", "#DFAB01", "#AD1A72",
 ];
 
 export const DEFAULT_CATEGORIES = [
@@ -27,58 +40,66 @@ export const DEFAULT_CATEGORIES = [
 export const THEMES = {
   dark: {
     id: "dark",
-    bg: "#050507",
-    bgCard: "rgba(15,15,22,.6)",
-    bgElevated: "rgba(20,20,29,.5)",
-    bgInput: "rgba(20,20,29,.6)",
-    bgSidebar: "rgba(10,10,15,.88)",
-    bgModal: "rgba(15,15,22,.92)",
-    bgHover: "rgba(30,30,40,.6)",
-    bgSubRow: "rgba(5,5,7,.4)",
-    border: "rgba(255,255,255,.06)",
-    borderSubtle: "rgba(255,255,255,.04)",
-    text: "#F0F0F5",
-    textSecondary: "#9898AE",
-    textMuted: "#5E5E72",
-    textDim: "#3A3A48",
-    textSub: "#7A7A90",
-    accent: "#3B82F6",
-    accentGlow: "rgba(59,130,246,.15)",
-    shadow: "0 24px 80px rgba(0,0,0,.5)",
+    // Backgrounds
+    bg: "#191919",
+    bgCard: "#202020",
+    bgElevated: "#252525",
+    bgInput: "#252525",
+    bgSidebar: "#191919",
+    bgModal: "rgba(25,25,25,.95)",
+    bgHover: "#2A2A2A",
+    bgSubRow: "#1E1E1E",
+    // Borders
+    border: "#333333",
+    borderSubtle: "#2A2A2A",
+    // Text - just black, white, gray
+    text: "#FFFFFF",
+    textSecondary: "#888888",
+    textMuted: "#888888",
+    textDim: "#555555",
+    textSub: "#666666",
+    // Accent
+    accent: COLORS.blue,
+    accentGlow: "rgba(47,128,237,.15)",
+    shadow: "0 16px 48px rgba(0,0,0,.4)",
+    // Gradient orbs
     gradientOrbs: [
-      { color: "rgba(59,130,246,.20)", size: 400, top: "10%", left: "5%", blur: 60 },
-      { color: "rgba(16,185,129,.18)", size: 300, top: "55%", right: "10%", blur: 50 },
-      { color: "rgba(139,92,246,.16)", size: 350, top: "0%", right: "25%", blur: 55 },
-      { color: "rgba(245,158,11,.12)", size: 250, bottom: "5%", left: "35%", blur: 45 },
+      { color: "rgba(47,128,237,.12)", size: 400, top: "10%", left: "5%", blur: 80 },
+      { color: "rgba(15,123,108,.08)", size: 300, top: "55%", right: "10%", blur: 60 },
+      { color: "rgba(105,64,165,.08)", size: 350, top: "0%", right: "25%", blur: 70 },
     ],
-    gradient: "radial-gradient(ellipse 600px 400px at 20% 80%, rgba(59,130,246,.25) 0%, transparent 70%), radial-gradient(ellipse 500px 350px at 80% 20%, rgba(16,185,129,.20) 0%, transparent 70%), radial-gradient(ellipse 450px 500px at 50% 50%, rgba(139,92,246,.15) 0%, transparent 70%)",
+    gradient: "radial-gradient(ellipse 600px 400px at 20% 80%, rgba(47,128,237,.12) 0%, transparent 70%), radial-gradient(ellipse 500px 350px at 80% 20%, rgba(15,123,108,.08) 0%, transparent 70%), radial-gradient(ellipse 450px 500px at 50% 50%, rgba(105,64,165,.06) 0%, transparent 70%)",
   },
   light: {
     id: "light",
-    bg: "#F5F5F7",
-    bgCard: "rgba(255,255,255,.7)",
-    bgElevated: "rgba(255,255,255,.6)",
-    bgInput: "rgba(255,255,255,.8)",
-    bgSidebar: "rgba(255,255,255,.85)",
-    bgModal: "rgba(255,255,255,.92)",
-    bgHover: "rgba(0,0,0,.03)",
-    bgSubRow: "rgba(0,0,0,.02)",
-    border: "rgba(0,0,0,.08)",
-    borderSubtle: "rgba(0,0,0,.05)",
-    text: "#1A1A2E",
-    textSecondary: "#5A5A72",
-    textMuted: "#8888A0",
-    textDim: "#B0B0C0",
-    textSub: "#7A7A90",
-    accent: "#2563EB",
-    accentGlow: "rgba(37,99,235,.12)",
-    shadow: "0 24px 80px rgba(0,0,0,.08)",
+    // Backgrounds
+    bg: "#FFFFFF",
+    bgCard: "#F7F7F5",
+    bgElevated: "#F0F0EE",
+    bgInput: "#FFFFFF",
+    bgSidebar: "#F7F7F5",
+    bgModal: "rgba(255,255,255,.97)",
+    bgHover: "#EBEBEA",
+    bgSubRow: "#F7F7F5",
+    // Borders
+    border: "#E3E3E0",
+    borderSubtle: "#EBEBEA",
+    // Text - just black, white, gray
+    text: "#000000",
+    textSecondary: "#888888",
+    textMuted: "#888888",
+    textDim: "#B0B0B0",
+    textSub: "#999999",
+    // Accent
+    accent: COLORS.blue,
+    accentGlow: "rgba(47,128,237,.10)",
+    shadow: "0 16px 48px rgba(0,0,0,.06)",
+    // Gradient orbs
     gradientOrbs: [
-      { color: "rgba(59,130,246,.08)", size: 400, top: "10%", left: "5%", blur: 80 },
-      { color: "rgba(16,185,129,.06)", size: 300, top: "55%", right: "10%", blur: 60 },
-      { color: "rgba(139,92,246,.05)", size: 350, top: "0%", right: "25%", blur: 70 },
-      { color: "rgba(245,158,11,.04)", size: 250, bottom: "5%", left: "35%", blur: 55 },
+      { color: "rgba(47,128,237,.05)", size: 400, top: "10%", left: "5%", blur: 100 },
+      { color: "rgba(15,123,108,.04)", size: 300, top: "55%", right: "10%", blur: 80 },
+      { color: "rgba(105,64,165,.03)", size: 350, top: "0%", right: "25%", blur: 90 },
     ],
-    gradient: "radial-gradient(ellipse 600px 400px at 20% 80%, rgba(59,130,246,.08) 0%, transparent 70%), radial-gradient(ellipse 500px 350px at 80% 20%, rgba(16,185,129,.06) 0%, transparent 70%), radial-gradient(ellipse 450px 500px at 50% 50%, rgba(139,92,246,.05) 0%, transparent 70%)",
+    gradient: "radial-gradient(ellipse 600px 400px at 20% 80%, rgba(47,128,237,.05) 0%, transparent 70%), radial-gradient(ellipse 500px 350px at 80% 20%, rgba(15,123,108,.04) 0%, transparent 70%), radial-gradient(ellipse 450px 500px at 50% 50%, rgba(105,64,165,.03) 0%, transparent 70%)",
   },
 };
