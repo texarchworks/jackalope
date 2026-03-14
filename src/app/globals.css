@@ -4,39 +4,113 @@
 
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap');
 
+:root {
+  --bg-void: #050507;
+  --bg-primary: #0A0A0F;
+  --bg-secondary: #0F0F16;
+  --bg-tertiary: #14141D;
+  --bg-elevated: #1A1A25;
+  --border: #252535;
+  --border-subtle: #1A1A28;
+  --text-primary: #F0F0F5;
+  --text-secondary: #9898AE;
+  --text-muted: #5E5E72;
+  --text-dim: #3A3A48;
+  --accent: #3B82F6;
+  --accent-glow: rgba(59,130,246,.15);
+  --accent-green: #10B981;
+  --accent-red: #EF4444;
+  --accent-amber: #F59E0B;
+}
+
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
   font-family: 'DM Sans', -apple-system, sans-serif;
-  background: #FFFFFF;
-  color: #191919;
+  background: var(--bg-void);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+  overflow: hidden;
 }
 
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #DDDDDD; border-radius: 10px; }
-
-input, select, textarea { font-family: 'DM Sans', -apple-system, sans-serif; }
-code, .mono { font-family: 'Space Mono', monospace; }
-button { transition: all 0.15s ease; }
-
-::selection { background: #2383E2; color: white; }
-
-/* GIANT RED BANNER TO PROVE DEPLOY WORKS */
-body::before {
-  content: 'NEW CODE IS LIVE ✓';
+/* Animated gradient background */
+body::after {
+  content: '';
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: #FF0000;
-  color: white;
-  text-align: center;
-  padding: 8px;
-  font-size: 18px;
-  font-weight: 700;
-  z-index: 99999;
-  letter-spacing: 2px;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: 
+    radial-gradient(ellipse 80% 50% at 20% 80%, rgba(59,130,246,.1) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(16,185,129,.08) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 60% at 50% 50%, rgba(139,92,246,.06) 0%, transparent 50%);
+  animation: gradientDrift 20s ease-in-out infinite alternate;
 }
+
+@keyframes gradientDrift {
+  0% { opacity: 1; transform: scale(1) translate(0,0); }
+  50% { opacity: 0.8; transform: scale(1.05) translate(20px, -10px); }
+  100% { opacity: 1; transform: scale(1) translate(0,0); }
+}
+
+/* Liquid glass orbs */
+body::before {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  inset: 0;
+  background:
+    radial-gradient(circle 200px at 15% 25%, rgba(59,130,246,.09) 0%, transparent 70%),
+    radial-gradient(circle 150px at 85% 75%, rgba(16,185,129,.07) 0%, transparent 70%),
+    radial-gradient(circle 220px at 60% 10%, rgba(139,92,246,.06) 0%, transparent 70%),
+    radial-gradient(circle 100px at 40% 90%, rgba(59,130,246,.05) 0%, transparent 70%);
+  animation: bubbleFloat 25s ease-in-out infinite alternate;
+}
+
+@keyframes bubbleFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(15px, -20px) scale(1.03); }
+  66% { transform: translate(-10px, 15px) scale(0.97); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* Noise */
+#__next::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.15); }
+
+input, select, textarea {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+code, .mono {
+  font-family: 'Space Mono', monospace;
+  letter-spacing: -0.03em;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent) !important;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-glow), 0 0 20px rgba(59,130,246,.08);
+}
+
+button { transition: all 0.15s ease; }
+button:active { transform: scale(0.98); }
+::selection { background: var(--accent); color: white; }
