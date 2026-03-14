@@ -473,14 +473,14 @@ export default function AppShell() {
       <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", overflow: "hidden" }}>
         <div style={{
           position: "absolute", width: "120%", height: "120%", top: "-10%", left: "-10%",
-          background: "radial-gradient(ellipse 600px 400px at 20% 80%, rgba(59,130,246,.12) 0%, transparent 70%), radial-gradient(ellipse 500px 350px at 80% 20%, rgba(16,185,129,.09) 0%, transparent 70%), radial-gradient(ellipse 450px 500px at 50% 50%, rgba(139,92,246,.07) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse 600px 400px at 20% 80%, rgba(59,130,246,.25) 0%, transparent 70%), radial-gradient(ellipse 500px 350px at 80% 20%, rgba(16,185,129,.20) 0%, transparent 70%), radial-gradient(ellipse 450px 500px at 50% 50%, rgba(139,92,246,.15) 0%, transparent 70%)",
           animation: "gradientDrift 20s ease-in-out infinite alternate",
         }} />
         {/* Glass orbs */}
-        <div style={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", top: "15%", left: "10%", background: "radial-gradient(circle, rgba(59,130,246,.1) 0%, transparent 70%)", filter: "blur(40px)", animation: "bubbleFloat 25s ease-in-out infinite alternate" }} />
-        <div style={{ position: "absolute", width: 200, height: 200, borderRadius: "50%", top: "60%", right: "15%", background: "radial-gradient(circle, rgba(16,185,129,.08) 0%, transparent 70%)", filter: "blur(30px)", animation: "bubbleFloat 30s ease-in-out infinite alternate-reverse" }} />
-        <div style={{ position: "absolute", width: 250, height: 250, borderRadius: "50%", top: "5%", right: "30%", background: "radial-gradient(circle, rgba(139,92,246,.08) 0%, transparent 70%)", filter: "blur(35px)", animation: "bubbleFloat 22s ease-in-out infinite alternate" }} />
-        <div style={{ position: "absolute", width: 150, height: 150, borderRadius: "50%", bottom: "10%", left: "40%", background: "radial-gradient(circle, rgba(245,158,11,.06) 0%, transparent 70%)", filter: "blur(25px)", animation: "bubbleFloat 28s ease-in-out infinite alternate-reverse" }} />
+        <div style={{ position: "absolute", width: 400, height: 400, borderRadius: "50%", top: "10%", left: "5%", background: "radial-gradient(circle, rgba(59,130,246,.20) 0%, transparent 70%)", filter: "blur(60px)", animation: "bubbleFloat 25s ease-in-out infinite alternate" }} />
+        <div style={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", top: "55%", right: "10%", background: "radial-gradient(circle, rgba(16,185,129,.18) 0%, transparent 70%)", filter: "blur(50px)", animation: "bubbleFloat 30s ease-in-out infinite alternate-reverse" }} />
+        <div style={{ position: "absolute", width: 350, height: 350, borderRadius: "50%", top: "0%", right: "25%", background: "radial-gradient(circle, rgba(139,92,246,.16) 0%, transparent 70%)", filter: "blur(55px)", animation: "bubbleFloat 22s ease-in-out infinite alternate" }} />
+        <div style={{ position: "absolute", width: 250, height: 250, borderRadius: "50%", bottom: "5%", left: "35%", background: "radial-gradient(circle, rgba(245,158,11,.12) 0%, transparent 70%)", filter: "blur(45px)", animation: "bubbleFloat 28s ease-in-out infinite alternate-reverse" }} />
       </div>
       {/* SIDEBAR */}
       <aside style={{ width: 240, background: "rgba(10,10,15,.88)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,.06)", display: "flex", flexDirection: "column", flexShrink: 0, height: "100vh", position: "sticky", top: 0, zIndex: 2 }}>
