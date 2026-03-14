@@ -76,7 +76,7 @@ export default function MyWork({ user, projects, goProj, goEditTask, onUpdateTas
           <p style={{ margin: 0, fontSize: 13, color: "var(--t-muted, #888)" }}>{user.role} · {active.length} active items across {Object.keys(byProj).length} project{Object.keys(byProj).length !== 1 ? "s" : ""}</p>
         </div>
         <div style={{ display: "flex", background: "var(--t-elevated, #252525)", borderRadius: 6, border: "1px solid var(--t-border, #333)", overflow: "hidden" }}>
-          {["dashboard", "calendar"].map((v) => <button key={v} onClick={() => setView(v)} style={{ padding: "6px 14px", fontSize: 12, fontWeight: 500, border: "none", cursor: "pointer", background: view === v ? "#2F80ED" : "transparent", color: view === v ? "white" : "var(--t-muted, #888)", textTransform: "capitalize", fontFamily: F }}>{v}</button>)}
+          {["dashboard", "calendar"].map((v) => <button key={v} onClick={() => setView(v)} style={{ padding: "6px 14px", fontSize: 12, fontWeight: 500, border: "none", cursor: "pointer", background: view === v ? "var(--t-text, #FFF)" : "transparent", color: view === v ? "var(--t-bg, #191919)" : "var(--t-muted, #888)", textTransform: "capitalize", fontFamily: F }}>{v}</button>)}
         </div>
       </div>
 
@@ -164,11 +164,11 @@ export default function MyWork({ user, projects, goProj, goEditTask, onUpdateTas
         {/* Calendar header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button onClick={prevMonth} style={{ ...bs, background: "var(--t-elevated, #252525)", color: "var(--t-muted, #888)", padding: "6px 12px" }}>←</button>
+            <button onClick={prevMonth} style={{ ...bs, background: "var(--t-text, #FFF)", color: "var(--t-bg, #191919)", padding: "6px 12px" }}>←</button>
             <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, minWidth: 200, textAlign: "center" }}>{monthName}</h3>
-            <button onClick={nextMonth} style={{ ...bs, background: "var(--t-elevated, #252525)", color: "var(--t-muted, #888)", padding: "6px 12px" }}>→</button>
+            <button onClick={nextMonth} style={{ ...bs, background: "var(--t-text, #FFF)", color: "var(--t-bg, #191919)", padding: "6px 12px" }}>→</button>
           </div>
-          <button onClick={goToday} style={{ ...bs, background: "var(--t-elevated, #252525)", color: "var(--t-muted, #888)", fontSize: 12 }}>Today</button>
+          <button onClick={goToday} style={{ ...bs, background: "var(--t-elevated, #252525)", color: "var(--t-text, #FFF)", fontSize: 12 }}>Today</button>
         </div>
 
         {/* Day headers */}
