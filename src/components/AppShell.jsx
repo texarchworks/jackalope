@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS, DEFAULT_CATEGORIES } from "@/lib/constants";
+import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS, DEFAULT_CATEGORIES, THEMES } from "@/lib/constants";
 import { makeAvatar as av, isOverdue } from "@/lib/helpers";
 import MyWork from "@/components/MyWork";
 import ProjectsHome from "@/components/ProjectsHome";
@@ -27,6 +27,9 @@ export default function AppShell() {
   const [signupMode, setSignupMode] = useState(false);
   const [signupName, setSignupName] = useState("");
   const [signupRole, setSignupRole] = useState("");
+  const [themeId, setThemeId] = useState(() => { if (typeof window !== "undefined") { return localStorage.getItem("jackalope-theme") || "dark"; } return "dark"; });
+  const T = THEMES[themeId] || THEMES.dark;
+  const toggleTheme = () => { const next = themeId === "dark" ? "light" : "dark"; setThemeId(next); if (typeof window !== "undefined") localStorage.setItem("jackalope-theme", next); };
 
   // ── AUTH ──
   useEffect(() => {
@@ -467,24 +470,39 @@ export default function AppShell() {
   }
 
   // ── MAIN APPLICATION ──
+  // Set CSS custom properties for theme
+  if (typeof document !== "undefined") {
+    const r = document.documentElement.style;
+    r.setProperty("--t-bg", T.bg);
+    r.setProperty("--t-card", T.bgCard);
+    r.setProperty("--t-elevated", T.bgElevated);
+    r.setProperty("--t-input", T.bgInput);
+    r.setProperty("--t-hover", T.bgHover);
+    r.setProperty("--t-subrow", T.bgSubRow);
+    r.setProperty("--t-border", T.border);
+    r.setProperty("--t-border-s", T.borderSubtle);
+    r.setProperty("--t-text", T.text);
+    r.setProperty("--t-text2", T.textSecondary);
+    r.setProperty("--t-muted", T.textMuted);
+    r.setProperty("--t-dim", T.textDim);
+    r.setProperty("--t-sub", T.textSub);
+    r.setProperty("--t-accent", T.accent);
+    r.setProperty("--t-shadow", T.shadow);
+    r.setProperty("--t-modal", T.bgModal);
+    r.setProperty("--t-sidebar", T.bgSidebar);
+    document.body.style.background = T.bg;
+    document.body.style.color = T.text;
+  }
   return (
-    <div style={{ fontFamily: F, background: "#050507", color: "#F0F0F5", minHeight: "100vh", display: "flex", position: "relative", overflow: "hidden" }}>
+    <div style={{ fontFamily: F, background: T.bg, color: T.text, minHeight: "100vh", display: "flex", position: "relative", overflow: "hidden" }}>
       {/* Animated gradient background */}
       <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", overflow: "hidden" }}>
-        <div style={{
-          position: "absolute", width: "120%", height: "120%", top: "-10%", left: "-10%",
-          background: "radial-gradient(ellipse 600px 400px at 20% 80%, rgba(59,130,246,.25) 0%, transparent 70%), radial-gradient(ellipse 500px 350px at 80% 20%, rgba(16,185,129,.20) 0%, transparent 70%), radial-gradient(ellipse 450px 500px at 50% 50%, rgba(139,92,246,.15) 0%, transparent 70%)",
-          animation: "gradientDrift 20s ease-in-out infinite alternate",
-        }} />
-        {/* Glass orbs */}
-        <div style={{ position: "absolute", width: 400, height: 400, borderRadius: "50%", top: "10%", left: "5%", background: "radial-gradient(circle, rgba(59,130,246,.20) 0%, transparent 70%)", filter: "blur(60px)", animation: "bubbleFloat 25s ease-in-out infinite alternate" }} />
-        <div style={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", top: "55%", right: "10%", background: "radial-gradient(circle, rgba(16,185,129,.18) 0%, transparent 70%)", filter: "blur(50px)", animation: "bubbleFloat 30s ease-in-out infinite alternate-reverse" }} />
-        <div style={{ position: "absolute", width: 350, height: 350, borderRadius: "50%", top: "0%", right: "25%", background: "radial-gradient(circle, rgba(139,92,246,.16) 0%, transparent 70%)", filter: "blur(55px)", animation: "bubbleFloat 22s ease-in-out infinite alternate" }} />
-        <div style={{ position: "absolute", width: 250, height: 250, borderRadius: "50%", bottom: "5%", left: "35%", background: "radial-gradient(circle, rgba(245,158,11,.12) 0%, transparent 70%)", filter: "blur(45px)", animation: "bubbleFloat 28s ease-in-out infinite alternate-reverse" }} />
+        <div style={{ position: "absolute", width: "120%", height: "120%", top: "-10%", left: "-10%", background: T.gradient, animation: "gradientDrift 20s ease-in-out infinite alternate" }} />
+        {T.gradientOrbs.map((orb, i) => <div key={i} style={{ position: "absolute", width: orb.size, height: orb.size, borderRadius: "50%", top: orb.top, left: orb.left, right: orb.right, bottom: orb.bottom, background: `radial-gradient(circle, ${orb.color} 0%, transparent 70%)`, filter: `blur(${orb.blur}px)`, animation: `bubbleFloat ${25 + i * 5}s ease-in-out infinite ${i % 2 === 0 ? "alternate" : "alternate-reverse"}` }} />)}
       </div>
       {/* SIDEBAR */}
-      <aside style={{ width: 240, background: "rgba(10,10,15,.88)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,.06)", display: "flex", flexDirection: "column", flexShrink: 0, height: "100vh", position: "sticky", top: 0, zIndex: 2 }}>
-        <div style={{ padding: "20px 18px 16px", borderBottom: "1px solid #1A1A28" }}>
+      <aside style={{ width: 240, background: T.bgSidebar, backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", flexShrink: 0, height: "100vh", position: "sticky", top: 0, zIndex: 2 }}>
+        <div style={{ padding: "20px 18px 16px", borderBottom: `1px solid ${T.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 34, height: 34, background: "#3B82F6", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, color: "#050507", letterSpacing: "-0.04em" }}>J</div>
             <div>
@@ -497,7 +515,7 @@ export default function AppShell() {
         <nav style={{ flex: 1, padding: "12px 10px", overflowY: "auto" }}>
           {[{ id: "mywork", label: "My Work", icon: "◐" }, { id: "projects", label: "Projects", icon: "▣" }, { id: "team", label: "Team", icon: "◉" }].map((n) => (
             <button key={n.id} onClick={() => { setPage(n.id); setCurProjId(null); }}
-              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: page === n.id ? 600 : 400, background: page === n.id ? "rgba(20,20,29,.6)" : "transparent", color: page === n.id ? "#F0F0F5" : "#5E5E72", marginBottom: 4, textAlign: "left", fontFamily: F }}>
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: page === n.id ? 600 : 400, background: page === n.id ? "rgba(20,20,29,.6)" : "transparent", color: page === n.id ? T.text : T.textMuted, marginBottom: 4, textAlign: "left", fontFamily: F }}>
               <span style={{ fontSize: 14 }}>{n.icon}</span>{n.label}
             </button>
           ))}
@@ -505,7 +523,7 @@ export default function AppShell() {
           <div style={{ fontSize: 10, color: "#3A3A48", textTransform: "uppercase", fontFamily: M, padding: "16px 12px 6px", letterSpacing: ".08em" }}>Projects</div>
           {projects.map((p) => (
             <button key={p.id} onClick={() => goProj(p.id)}
-              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12, fontWeight: curProjId === p.id && page === "project" ? 600 : 400, background: curProjId === p.id && page === "project" ? "rgba(20,20,29,.6)" : "transparent", color: curProjId === p.id && page === "project" ? "#F0F0F5" : "#5E5E72", marginBottom: 2, textAlign: "left", fontFamily: F }}>
+              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12, fontWeight: curProjId === p.id && page === "project" ? 600 : 400, background: curProjId === p.id && page === "project" ? "rgba(20,20,29,.6)" : "transparent", color: curProjId === p.id && page === "project" ? T.text : T.textMuted, marginBottom: 2, textAlign: "left", fontFamily: F }}>
               <div style={{ width: 22, height: 22, borderRadius: 5, background: p.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "white", flexShrink: 0 }}>{p.icon}</div>
               <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
               <span style={{ marginLeft: "auto", fontSize: 10, color: "#3A3A48", fontFamily: M }}>{p.tasks.filter((t) => t.status !== "resolved").length}</span>
@@ -514,7 +532,7 @@ export default function AppShell() {
         </nav>
 
         {/* User info + logout */}
-        <div style={{ padding: "12px 10px", borderTop: "1px solid #1A1A28" }}>
+        <div style={{ padding: "12px 10px", borderTop: `1px solid ${T.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px" }}>
             <div style={{ width: 30, height: 30, borderRadius: "50%", background: profile?.color || "#3B82F6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "white" }}>{av(profile?.name || "U")}</div>
             <div style={{ flex: 1, overflow: "hidden" }}>
@@ -522,20 +540,23 @@ export default function AppShell() {
               <div style={{ fontSize: 10, color: "#5E5E72" }}>{profile?.role || ""}</div>
             </div>
           </div>
-          <button onClick={handleLogout} style={{ ...bs, background: "rgba(20,20,29,.5)", color: "#5E5E72", width: "100%", marginTop: 4, fontSize: 11 }}>Sign Out</button>
+          <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
+            <button onClick={toggleTheme} style={{ ...bs, background: T.bgElevated, color: T.textMuted, flex: 1, fontSize: 11 }}>{themeId === "dark" ? "☀ Light" : "🌙 Dark"}</button>
+            <button onClick={handleLogout} style={{ ...bs, background: T.bgElevated, color: T.textMuted, flex: 1, fontSize: 11 }}>Sign Out</button>
+          </div>
         </div>
       </aside>
 
       {/* MAIN CONTENT */}
       <main style={{ flex: 1, padding: "24px 28px", overflowY: "auto", maxHeight: "100vh", position: "relative", zIndex: 2 }}>
         {page === "mywork" && profile && (
-          <MyWork user={profile} projects={projects} goProj={goProj} goEditTask={goEditTask} onUpdateTask={updateTaskLocal} />
+          <MyWork user={profile} projects={projects} goProj={goProj} goEditTask={goEditTask} onUpdateTask={updateTaskLocal} theme={T} />
         )}
         {page === "projects" && (
-          <ProjectsHome projects={projects} goProj={goProj} onNew={createProject} allUsers={projects.flatMap((p) => p.team).filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)} />
+          <ProjectsHome projects={projects} goProj={goProj} onNew={createProject} allUsers={projects.flatMap((p) => p.team).filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i)} theme={T} />
         )}
         {page === "team" && org && (
-          <OrgTeam org={org} orgMembers={orgMembers} projects={projects} userId={user?.id} onReload={loadProjects} />
+          <OrgTeam org={org} orgMembers={orgMembers} projects={projects} userId={user?.id} onReload={loadProjects} theme={T} />
         )}
         {page === "project" && curProj && (
           <>
@@ -558,6 +579,7 @@ export default function AppShell() {
               onUpdateTask={(taskId, updates) => updateTaskLocal(curProj.id, taskId, updates)}
               onDeleteTask={(taskId) => deleteTask(curProj.id, taskId)}
               onReload={loadProjects}
+              theme={T}
             />
           </>
         )}
