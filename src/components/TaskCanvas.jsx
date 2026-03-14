@@ -3,8 +3,8 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { PRIORITIES as PRI, STATUSES as STA } from "@/lib/constants";
 import { makeAvatar as av } from "@/lib/helpers";
 
-const M = "'Space Mono', monospace";
-const F = "'DM Sans', -apple-system, sans-serif";
+const M = "'IBM Plex Mono', monospace";
+const F = "'Inter', -apple-system, sans-serif";
 const bs = { padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, fontFamily: F, transition: "all .15s" };
 const ins = { background: "var(--t-elevated, #14141D)", border: "1px solid var(--t-border, #252535)", borderRadius: 8, padding: "10px 14px", color: "var(--t-text, #F0F0F5)", fontSize: 13, outline: "none", fontFamily: F, boxSizing: "border-box" };
 const sl = { ...ins, cursor: "pointer" };
@@ -25,13 +25,13 @@ function SubTaskModal({ onClose, onSubmit, team, cats, parentTitle }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div><label style={lb}>Sub-Task Title</label><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs to happen?" style={{ ...ins, width: "100%" }} autoFocus /></div>
         <div><label style={lb}>Priority</label><select value={priority} onChange={(e) => setPriority(e.target.value)} style={{ ...sl, width: "100%" }}>{Object.entries(PRI).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></div>
-        <div><label style={lb}>Categories</label><div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{cats.map((c) => <button key={c} type="button" onClick={() => toggleCat(c)} style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${selCats.includes(c) ? "#3B82F6" : "var(--t-border, #252535)"}`, background: selCats.includes(c) ? "#3B82F620" : "var(--t-elevated, #14141D)", color: selCats.includes(c) ? "#93C5FD" : "var(--t-muted, #5E5E72)", fontSize: 10, cursor: "pointer", fontFamily: F }}>{c}</button>)}</div></div>
+        <div><label style={lb}>Categories</label><div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{cats.map((c) => <button key={c} type="button" onClick={() => toggleCat(c)} style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${selCats.includes(c) ? "#2F80ED" : "var(--t-border, #252535)"}`, background: selCats.includes(c) ? "#2F80ED20" : "var(--t-elevated, #14141D)", color: selCats.includes(c) ? "#93C5FD" : "var(--t-muted, #5E5E72)", fontSize: 10, cursor: "pointer", fontFamily: F }}>{c}</button>)}</div></div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <div><label style={lb}>Assignee</label><select value={assignee || ""} onChange={(e) => setAssignee(e.target.value || null)} style={{ ...sl, width: "100%" }}><option value="">Unassigned</option>{team.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
           <div><label style={lb}>Due Date</label><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={{ ...ins, width: "100%" }} /></div>
         </div>
         <div><label style={lb}>Notes</label><textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} style={{ ...ins, width: "100%", resize: "vertical" }} /></div>
-        <button onClick={submit} style={{ ...bs, background: "#10B981", color: "white", width: "100%", padding: "12px", fontWeight: 600 }}>Create Sub-Task</button>
+        <button onClick={submit} style={{ ...bs, background: "#0F7B6C", color: "white", width: "100%", padding: "12px", fontWeight: 600 }}>Create Sub-Task</button>
       </div></div></div>);
 }
 function AddSubLocModal({ locCode, locLabel, subLabel, onClose, onSubmit }) {
@@ -43,7 +43,7 @@ function AddSubLocModal({ locCode, locLabel, subLabel, onClose, onSubmit }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div><label style={lb}>Code</label><input value={code} onChange={(e) => setCode(e.target.value)} placeholder="e.g. A-1" style={{ ...ins, width: "100%" }} autoFocus /></div>
         <div><label style={lb}>Name</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder={`${subLabel} name`} style={{ ...ins, width: "100%" }} onKeyDown={(e) => { if (e.key === "Enter" && code.trim() && name.trim()) onSubmit({ code, name }); }} /></div>
-        <button onClick={() => { if (code.trim() && name.trim()) onSubmit({ code, name }); }} style={{ ...bs, background: "#10B981", color: "white", width: "100%", padding: "12px", fontWeight: 600 }}>Add {subLabel}</button>
+        <button onClick={() => { if (code.trim() && name.trim()) onSubmit({ code, name }); }} style={{ ...bs, background: "#0F7B6C", color: "white", width: "100%", padding: "12px", fontWeight: 600 }}>Add {subLabel}</button>
       </div></div></div>);
 }
 function AddTaskModal({ loc, sub, team, cats, onClose, onSubmit }) {
@@ -58,13 +58,13 @@ function AddTaskModal({ loc, sub, team, cats, onClose, onSubmit }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div><label style={lb}>Task Title</label><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Describe the open item…" style={{ ...ins, width: "100%" }} autoFocus /></div>
         <div><label style={lb}>Priority</label><select value={priority} onChange={(e) => setPriority(e.target.value)} style={{ ...sl, width: "100%" }}>{Object.entries(PRI).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></div>
-        <div><label style={lb}>Categories</label><div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{cats.map((c) => <button key={c} type="button" onClick={() => toggleCat(c)} style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${selCats.includes(c) ? "#3B82F6" : "var(--t-border, #252535)"}`, background: selCats.includes(c) ? "#3B82F620" : "var(--t-elevated, #14141D)", color: selCats.includes(c) ? "#93C5FD" : "var(--t-muted, #5E5E72)", fontSize: 10, cursor: "pointer", fontFamily: F }}>{c}</button>)}</div></div>
+        <div><label style={lb}>Categories</label><div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>{cats.map((c) => <button key={c} type="button" onClick={() => toggleCat(c)} style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${selCats.includes(c) ? "#2F80ED" : "var(--t-border, #252535)"}`, background: selCats.includes(c) ? "#2F80ED20" : "var(--t-elevated, #14141D)", color: selCats.includes(c) ? "#93C5FD" : "var(--t-muted, #5E5E72)", fontSize: 10, cursor: "pointer", fontFamily: F }}>{c}</button>)}</div></div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <div><label style={lb}>Assignee</label><select value={assignee || ""} onChange={(e) => setAssignee(e.target.value || null)} style={{ ...sl, width: "100%" }}><option value="">Unassigned</option>{team.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
           <div><label style={lb}>Due Date</label><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={{ ...ins, width: "100%" }} /></div>
         </div>
         <div><label style={lb}>Notes</label><textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} style={{ ...ins, width: "100%", resize: "vertical" }} /></div>
-        <button onClick={submit} style={{ ...bs, background: "#10B981", color: "white", width: "100%", padding: "12px", fontWeight: 600 }}>Create Task</button>
+        <button onClick={submit} style={{ ...bs, background: "#0F7B6C", color: "white", width: "100%", padding: "12px", fontWeight: 600 }}>Create Task</button>
       </div></div></div>);
 }
 
@@ -150,7 +150,7 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
       const subs = tree.childTasks[task.id] || [];
       let stY = taskY;
       subs.forEach((st) => {
-        const stColor = st.status === "resolved" ? "#10B98144" : (PRI[st.priority]?.color || T.border);
+        const stColor = st.status === "resolved" ? "#0F7B6C44" : (PRI[st.priority]?.color || T.border);
         const isStExp = isLocked(st.id);
         const effectiveStH = isStExp ? Math.max(STASK_H, DETAIL_H_SUB) : STASK_H;
         pos[st.id] = { x: effectiveSubX, y: stY, w: STASK_W, h: STASK_H, type: "subtask", data: st, expanded: isStExp };
@@ -185,7 +185,7 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
         let taskY = subY;
         subTasks.forEach((task) => {
           const tY = Math.max(taskY, subY);
-          const tColor = task.status === "resolved" ? "#10B98144" : (PRI[task.priority]?.color || T.border);
+          const tColor = task.status === "resolved" ? "#0F7B6C44" : (PRI[task.priority]?.color || T.border);
           const isExp = isLocked(task.id);
           pos[task.id] = { x: col2Sub, y: tY, w: TASK_W, h: TASK_H, type: "task", data: task, expanded: isExp };
           wires.push({ x1: col1 + SUB_W, y1: subY + SUB_H / 2, x2: col2Sub, y2: tY + TASK_H / 2, color: tColor, dashed: task.status === "resolved", taskId: task.id });
@@ -198,7 +198,7 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
 
       directTasks.forEach((task) => {
         const tY = Math.max(childY, locY);
-        const tColor = task.status === "resolved" ? "#10B98144" : (PRI[task.priority]?.color || loc.color);
+        const tColor = task.status === "resolved" ? "#0F7B6C44" : (PRI[task.priority]?.color || loc.color);
         const isExp = isLocked(task.id);
         pos[task.id] = { x: col2Direct, y: tY, w: TASK_W, h: TASK_H, type: "task", data: task, expanded: isExp };
         wires.push({ x1: col0 + LOC_W, y1: locY + LOC_H / 2, x2: col2Direct, y2: tY + TASK_H / 2, color: tColor, dashed: task.status === "resolved", taskId: task.id });
@@ -216,7 +216,7 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
       if (!collapsed[unId]) {
         let tY = y;
         tree.rootTasks.forEach((task) => {
-          const tColor = task.status === "resolved" ? "#10B98144" : (PRI[task.priority]?.color || "#CA8A04");
+          const tColor = task.status === "resolved" ? "#0F7B6C44" : (PRI[task.priority]?.color || "#CA8A04");
           const isExp = isLocked(task.id);
           pos[task.id] = { x: col2Direct, y: tY, w: TASK_W, h: TASK_H, type: "task", data: task, expanded: isExp };
           wires.push({ x1: col0 + LOC_W, y1: y + LOC_H / 2, x2: col2Direct, y2: tY + TASK_H / 2, color: tColor, dashed: true, taskId: task.id });
@@ -299,7 +299,7 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
   const renderWires = () => wires.map((w, i) => {
     const isHot = hoveredNode && Object.entries(positions).find(([id]) => id === hoveredNode && positions[id] && (Math.abs(positions[id].y + positions[id].h / 2 - w.y1) < 2 || Math.abs(positions[id].y + positions[id].h / 2 - w.y2) < 2));
     const opacity = getWireOpacity(w);
-    return <path key={i} d={`M ${w.x1} ${w.y1} C ${w.x1 + 30} ${w.y1}, ${w.x2 - 30} ${w.y2}, ${w.x2} ${w.y2}`} fill="none" stroke={isHot ? "#3B82F6" : w.color} strokeWidth={isHot ? 2.5 : 1.5} strokeDasharray={w.dashed ? "4 4" : "none"} opacity={opacity} style={{ transition: "opacity .3s" }} />;
+    return <path key={i} d={`M ${w.x1} ${w.y1} C ${w.x1 + 30} ${w.y1}, ${w.x2 - 30} ${w.y2}, ${w.x2} ${w.y2}`} fill="none" stroke={isHot ? "#2F80ED" : w.color} strokeWidth={isHot ? 2.5 : 1.5} strokeDasharray={w.dashed ? "4 4" : "none"} opacity={opacity} style={{ transition: "opacity .3s" }} />;
   });
 
   const renderNode = (id) => {
@@ -361,7 +361,7 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
                 <span onClick={openPriorityMenu} style={{ fontSize: 9, padding: "1px 4px", borderRadius: 2, background: pr.bg, color: pr.color, fontWeight: 600, cursor: "pointer" }} title="Change priority">{pr.label} ▾</span>
               </div>
               <div style={{ display: "flex", gap: 2 }}>
-                <button onClick={(e) => { e.stopPropagation(); toggleLock(task.id); }} style={{ background: "none", border: "none", cursor: "pointer", color: isLocked ? "#3B82F6" : T.textMuted, fontSize: 10, padding: "0 2px" }} title={isLocked ? "Unlock" : "Lock open"}>{isLocked ? "🔒" : "▸"}</button>
+                <button onClick={(e) => { e.stopPropagation(); toggleLock(task.id); }} style={{ background: "none", border: "none", cursor: "pointer", color: isLocked ? "#2F80ED" : T.textMuted, fontSize: 10, padding: "0 2px" }} title={isLocked ? "Unlock" : "Lock open"}>{isLocked ? "🔒" : "▸"}</button>
                 {permissions.canCreate&&<button onClick={(e) => { e.stopPropagation(); setAddSubFor(task.id); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, fontSize: 10, padding: "0 2px" }} title="Add sub-task">+</button>}
                 {!permissions.isViewer&&<button onClick={(e) => { e.stopPropagation(); onEditTask(task); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, fontSize: 10, padding: "0 2px" }} title="Edit">✎</button>}
               </div>
@@ -374,9 +374,9 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
                 {task.dueDate && <span style={{ fontSize: 9, color: overdue ? "#F87171" : T.textMuted, fontWeight: overdue ? 600 : 400, fontFamily: M }}>{task.dueDate}{overdue ? " ⚠" : ""}</span>}
               </div>
             </div>
-            {progress && <div style={{ marginTop: 3, height: 2, background: T.border, borderRadius: 1, overflow: "hidden" }}><div style={{ height: "100%", width: `${progress.pct}%`, background: progress.pct === 100 ? "#10B981" : "#3B82F6", borderRadius: 1 }} /></div>}
+            {progress && <div style={{ marginTop: 3, height: 2, background: T.border, borderRadius: 1, overflow: "hidden" }}><div style={{ height: "100%", width: `${progress.pct}%`, background: progress.pct === 100 ? "#0F7B6C" : "#2F80ED", borderRadius: 1 }} /></div>}
           </div>
-          {isShowDetail && <div style={{ width: DETAIL_W, background: T.bgCard, border: `1px solid ${isLocked ? "#3B82F644" : T.border}`, borderRadius: 6, padding: "8px 10px", boxSizing: "border-box", fontSize: 10, color: T.textSecondary, lineHeight: 1.6, overflow: "hidden", opacity: isRes ? 0.5 : 1 }}>
+          {isShowDetail && <div style={{ width: DETAIL_W, background: T.bgCard, border: `1px solid ${isLocked ? "#2F80ED44" : T.border}`, borderRadius: 6, padding: "8px 10px", boxSizing: "border-box", fontSize: 10, color: T.textSecondary, lineHeight: 1.6, overflow: "hidden", opacity: isRes ? 0.5 : 1 }}>
             <div style={{ fontSize: 9, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", fontFamily: M, marginBottom: 4, letterSpacing: ".05em" }}>Details</div>
             {task.title.length > 42 && <div style={{ color: T.text, marginBottom: 6 }}>{task.title}</div>}
             {task.notes && <div style={{ marginBottom: 6 }}><span style={{ color: T.textMuted, fontFamily: M, fontSize: 9 }}>Notes: </span>{task.notes.length > 120 ? task.notes.substring(0, 120) + "…" : task.notes}</div>}
@@ -412,7 +412,7 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
                 <span onClick={openPriorityMenu} style={{ fontSize: 8, padding: "1px 3px", borderRadius: 2, background: pr.bg, color: pr.color, fontWeight: 600, cursor: "pointer" }} title="Change priority">{pr.label} ▾</span>
               </div>
               <div style={{ display: "flex", gap: 2 }}>
-                <button onClick={(e) => { e.stopPropagation(); toggleLock(task.id); }} style={{ background: "none", border: "none", cursor: "pointer", color: isLocked ? "#3B82F6" : T.textMuted, fontSize: 9, padding: 0 }} title={isLocked ? "Unlock" : "Lock open"}>{isLocked ? "🔒" : "▸"}</button>
+                <button onClick={(e) => { e.stopPropagation(); toggleLock(task.id); }} style={{ background: "none", border: "none", cursor: "pointer", color: isLocked ? "#2F80ED" : T.textMuted, fontSize: 9, padding: 0 }} title={isLocked ? "Unlock" : "Lock open"}>{isLocked ? "🔒" : "▸"}</button>
                 {!permissions.isViewer&&<button onClick={(e) => { e.stopPropagation(); onEditTask(task); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, fontSize: 9, padding: 0 }}>✎</button>}
               </div>
             </div>
@@ -422,7 +422,7 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
               {task.dueDate && <span style={{ fontSize: 8, color: overdue ? "#F87171" : T.textMuted, fontWeight: overdue ? 600 : 400, fontFamily: M }}>{task.dueDate}{overdue ? " ⚠" : ""}</span>}
             </div>
           </div>
-          {isShowDetail && <div style={{ width: DETAIL_W, background: T.bg, border: `1px solid ${isLocked ? "#3B82F644" : T.borderSubtle}`, borderRadius: 6, padding: "6px 8px", boxSizing: "border-box", fontSize: 9, color: T.textSecondary, lineHeight: 1.6, overflow: "hidden", opacity: isRes ? 0.45 : 1 }}>
+          {isShowDetail && <div style={{ width: DETAIL_W, background: T.bg, border: `1px solid ${isLocked ? "#2F80ED44" : T.borderSubtle}`, borderRadius: 6, padding: "6px 8px", boxSizing: "border-box", fontSize: 9, color: T.textSecondary, lineHeight: 1.6, overflow: "hidden", opacity: isRes ? 0.45 : 1 }}>
             <div style={{ fontSize: 8, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", fontFamily: M, marginBottom: 3, letterSpacing: ".05em" }}>Details</div>
             {task.title.length > 35 && <div style={{ color: T.text, marginBottom: 4 }}>{task.title}</div>}
             {task.notes && <div style={{ marginBottom: 4 }}><span style={{ color: T.textMuted, fontFamily: M, fontSize: 8 }}>Notes: </span>{task.notes.length > 100 ? task.notes.substring(0, 100) + "…" : task.notes}</div>}
@@ -448,15 +448,15 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
         <button onClick={() => setCollapsed({})} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, fontSize: 11, padding: "2px 6px" }}>Expand</button>
         <button onClick={() => { const c = {}; p.locs.forEach((l) => { c[`loc-${l.id}`] = true; }); setCollapsed(c); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, fontSize: 11, padding: "2px 6px" }}>Collapse</button>
         <div style={{ width: 1, background: T.border, margin: "0 4px" }} />
-        <button onClick={() => setSortBy(sortBy === "priority" ? "deadline" : "priority")} style={{ background: "none", border: "none", cursor: "pointer", color: sortBy === "priority" ? "#EF4444" : "#3B82F6", fontSize: 11, padding: "2px 6px", fontFamily: M }}>{sortBy === "priority" ? "↕ PRI" : "↕ DATE"}</button>
+        <button onClick={() => setSortBy(sortBy === "priority" ? "deadline" : "priority")} style={{ background: "none", border: "none", cursor: "pointer", color: sortBy === "priority" ? "#E03E3E" : "#2F80ED", fontSize: 11, padding: "2px 6px", fontFamily: M }}>{sortBy === "priority" ? "↕ PRI" : "↕ DATE"}</button>
         <div style={{ width: 1, background: T.border, margin: "0 4px" }} />
         {Object.keys(lockedNodes).length > 0
-          ? <button onClick={() => setLockedNodes({})} style={{ background: "none", border: "none", cursor: "pointer", color: "#3B82F6", fontSize: 11, padding: "2px 6px" }}>Unlock All</button>
+          ? <button onClick={() => setLockedNodes({})} style={{ background: "none", border: "none", cursor: "pointer", color: "#2F80ED", fontSize: 11, padding: "2px 6px" }}>Unlock All</button>
           : <button onClick={() => { const all = {}; p.tasks.forEach((t) => { all[t.id] = true; }); setLockedNodes(all); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, fontSize: 11, padding: "2px 6px" }}>Expand All Details</button>
         }
       </div>
       {/* Filter indicator */}
-      {hasActiveFilter && <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10, background: "#3B82F622", border: "1px solid #3B82F644", borderRadius: 8, padding: "6px 12px", display: "flex", alignItems: "center", gap: 6, backdropFilter: "blur(8px)" }}>
+      {hasActiveFilter && <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10, background: "#2F80ED22", border: "1px solid #2F80ED44", borderRadius: 8, padding: "6px 12px", display: "flex", alignItems: "center", gap: 6, backdropFilter: "blur(8px)" }}>
         <span style={{ fontSize: 10, color: "#93C5FD", fontWeight: 600 }}>● FILTERED</span>
         <span style={{ fontSize: 10, color: T.textMuted }}>Non-matching items dimmed</span>
       </div>}
