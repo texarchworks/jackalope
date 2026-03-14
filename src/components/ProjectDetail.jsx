@@ -41,7 +41,7 @@ function TaskForm({ task, onChange, onSubmit, btnLabel, team, locs, subs, cats, 
     </div>
     <div><label style={lb}>Categories</label>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {cats.map((c) => <button key={c} type="button" onClick={() => toggleCat(c)} style={{ padding: "4px 10px", borderRadius: 4, border: `1px solid ${selCats.includes(c) ? T?.text||"var(--t-text, #FFF)" : "var(--t-border, #252535)"}`, background: selCats.includes(c) ? (T?.text||"#FFF")+"18" : T?.bgElevated||"var(--t-elevated, #252525)", color: selCats.includes(c) ? "#93C5FD" : "var(--t-muted, #5E5E72)", fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all .15s" }}>{c}</button>)}
+        {cats.map((c) => <button key={c} type="button" onClick={() => toggleCat(c)} style={{ padding: "4px 10px", borderRadius: 4, border: `1px solid ${selCats.includes(c) ? "var(--t-text, #FFF)" : "var(--t-border, #333)"}`, background: selCats.includes(c) ? "var(--t-elevated, #252525)" : "var(--t-elevated, #252525)", color: selCats.includes(c) ? "var(--t-text, #FFF)" : "var(--t-muted, #888)", fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all .15s" }}>{c}</button>)}
         {cats.length === 0 && <span style={{ fontSize: 11, color: "var(--t-muted, #5E5E72)" }}>No categories defined. Add in Settings.</span>}
       </div>
     </div>
@@ -51,7 +51,7 @@ function TaskForm({ task, onChange, onSubmit, btnLabel, team, locs, subs, cats, 
       <div><label style={lb}>Due Date</label><input type="date" value={task.dueDate || ""} onChange={(e) => onChange({ ...task, dueDate: e.target.value })} style={{ ...ins, width: "100%" }} /></div>
     </div>
     <div><label style={lb}>Notes</label><textarea value={task.notes || ""} onChange={(e) => onChange({ ...task, notes: e.target.value })} rows={3} style={{ ...ins, width: "100%", resize: "vertical" }} /></div>
-    <button onClick={onSubmit} style={{ ...bs, background: "#0F7B6C", color: "white", width: "100%", padding: "12px", fontWeight: 600 }}>{btnLabel}</button>
+    <button onClick={onSubmit} style={{ ...bs, background: "var(--t-text, #FFF)", color: "var(--t-bg, #191919)", width: "100%", padding: "12px", fontWeight: 600 }}>{btnLabel}</button>
   </div>);
 }
 
