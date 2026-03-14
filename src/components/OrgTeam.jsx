@@ -3,10 +3,10 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { makeAvatar as av } from "@/lib/helpers";
 
-const M = "'Space Mono', monospace";
-const F = "'DM Sans', -apple-system, sans-serif";
+const M = "'IBM Plex Mono', monospace";
+const F = "'Inter', -apple-system, sans-serif";
 const bs = { padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, fontFamily: F, transition: "all .15s" };
-const ins = { background: "#14141D", border: "1px solid #252535", borderRadius: 8, padding: "10px 14px", color: "#F0F0F5", fontSize: 13, outline: "none", fontFamily: F, boxSizing: "border-box" };
+const ins = { background: "var(--t-elevated, #252525)", border: "1px solid #252535", borderRadius: 8, padding: "10px 14px", color: "var(--t-text, #FFF)", fontSize: 13, outline: "none", fontFamily: F, boxSizing: "border-box" };
 const sl = { ...ins, cursor: "pointer" };
 
 export default function OrgTeam({ org, orgMembers, projects, userId, onReload }) {
@@ -66,29 +66,29 @@ export default function OrgTeam({ org, orgMembers, projects, userId, onReload })
     <div>
       <div style={{ marginBottom: 20 }}>
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Team</h2>
-        <p style={{ margin: "4px 0 0", fontSize: 13, color: "#5E5E72" }}>{org.name} — {active.length} active internal member{active.length !== 1 ? "s" : ""}</p>
+        <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--t-muted, #888)" }}>{org.name} — {active.length} active internal member{active.length !== 1 ? "s" : ""}</p>
       </div>
 
       {/* Invite - org admins only */}
-      {isOrgAdmin && <div style={{ background: "#0F0F16", border: "1px solid #252535", borderRadius: 10, padding: "16px 20px", marginBottom: 20 }}>
+      {isOrgAdmin && <div style={{ background: "var(--t-card, #202020)", border: "1px solid #252535", borderRadius: 10, padding: "16px 20px", marginBottom: 20 }}>
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Invite Internal Member</div>
-        <p style={{ fontSize: 11, color: "#5E5E72", margin: "0 0 10px" }}>Only @texarchworks.com emails. For external collaborators (consultants, contractors), use Project Settings.</p>
+        <p style={{ fontSize: 11, color: "var(--t-muted, #888)", margin: "0 0 10px" }}>Only @texarchworks.com emails. For external collaborators (consultants, contractors), use Project Settings.</p>
         <div style={{ display: "flex", gap: 8 }}>
           <input value={invName} onChange={(e) => setInvName(e.target.value)} placeholder="Full Name" style={{ ...ins, width: 170 }} />
           <input value={invEmail} onChange={(e) => setInvEmail(e.target.value)} placeholder="name@texarchworks.com" style={{ ...ins, flex: 1 }}
             onKeyDown={(e) => { if (e.key === "Enter") sendInvite(); }} />
           <button disabled={invLoading || !invName.trim() || !invEmail.trim()} onClick={sendInvite}
-            style={{ ...bs, background: invLoading ? "#252535" : "#10B981", color: "white", padding: "10px 20px", whiteSpace: "nowrap" }}>
+            style={{ ...bs, background: invLoading ? "var(--t-border, #333)" : "#0F7B6C", color: "white", padding: "10px 20px", whiteSpace: "nowrap" }}>
             {invLoading ? "Sending…" : "Send Invite"}
           </button>
         </div>
-        {invStatus && <div style={{ fontSize: 12, color: invStatus.startsWith("✓") ? "#10B981" : "#EF4444", marginTop: 8 }}>{invStatus}</div>}
+        {invStatus && <div style={{ fontSize: 12, color: invStatus.startsWith("✓") ? "#0F7B6C" : "#E03E3E", marginTop: 8 }}>{invStatus}</div>}
       </div>}
 
       {/* Filter */}
       <div style={{ display: "flex", gap: 0, marginBottom: 16, borderBottom: "1px solid #252535" }}>
         {[{ id: "active", label: `Active (${active.length})` }, { id: "inactive", label: `Inactive (${inactive.length})` }, { id: "all", label: `All (${orgMembers.length})` }].map((t) => (
-          <button key={t.id} onClick={() => setFilter(t.id)} style={{ padding: "8px 16px", fontSize: 12, fontWeight: 600, border: "none", borderBottom: filter === t.id ? "2px solid #3B82F6" : "2px solid transparent", cursor: "pointer", background: "transparent", color: filter === t.id ? "#F0F0F5" : "#5E5E72", fontFamily: F }}>{t.label}</button>
+          <button key={t.id} onClick={() => setFilter(t.id)} style={{ padding: "8px 16px", fontSize: 12, fontWeight: 600, border: "none", borderBottom: filter === t.id ? "2px solid #3B82F6" : "2px solid transparent", cursor: "pointer", background: "transparent", color: filter === t.id ? "var(--t-text, #FFF)" : "var(--t-muted, #888)", fontFamily: F }}>{t.label}</button>
         ))}
       </div>
 
@@ -97,22 +97,22 @@ export default function OrgTeam({ org, orgMembers, projects, userId, onReload })
         {shown.map((m) => {
           const memberProjects = projects.filter((p) => p.team.find((t) => t.id === m.user_id));
           const isInactive = m.is_active === false;
-          const roleCfg = { owner: { bg: "#CA8A04", label: "Owner" }, admin: { bg: "#EF4444", label: "Admin" }, member: { bg: "#1A1A28", label: "Member" } }[m.org_role] || { bg: "#1A1A28", label: m.org_role };
+          const roleCfg = { owner: { bg: "#CA8A04", label: "Owner" }, admin: { bg: "#E03E3E", label: "Admin" }, member: { bg: "var(--t-border-s, #2A2A2A)", label: "Member" } }[m.org_role] || { bg: "var(--t-border-s, #2A2A2A)", label: m.org_role };
           return (
-            <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", background: "#14141D", border: `1px solid ${isInactive ? "#1A1A28" : "#252535"}`, borderRadius: 8, opacity: isInactive ? 0.5 : 1 }}>
-              <div style={{ width: 40, height: 40, borderRadius: "50%", background: m.profile?.color || "#3B82F6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "white" }}>{av(m.profile?.name || "?")}</div>
+            <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", background: "var(--t-elevated, #252525)", border: `1px solid ${isInactive ? "var(--t-border-s, #2A2A2A)" : "var(--t-border, #333)"}`, borderRadius: 8, opacity: isInactive ? 0.5 : 1 }}>
+              <div style={{ width: 40, height: 40, borderRadius: "50%", background: m.profile?.color || "#2F80ED", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "white" }}>{av(m.profile?.name || "?")}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>
                   {m.profile?.name || "Pending"}
                   <span style={{ marginLeft: 8, fontSize: 9, padding: "1px 5px", borderRadius: 3, background: roleCfg.bg, color: "white", fontWeight: 600 }}>{roleCfg.label}</span>
-                  {isInactive && <span style={{ marginLeft: 6, fontSize: 9, padding: "1px 5px", borderRadius: 3, background: "#3A3A48", color: "#9898AE" }}>Inactive</span>}
+                  {isInactive && <span style={{ marginLeft: 6, fontSize: 9, padding: "1px 5px", borderRadius: 3, background: "var(--t-dim, #555)", color: "var(--t-text2, #888)" }}>Inactive</span>}
                   {!m.joined_at && <span style={{ marginLeft: 6, fontSize: 9, padding: "1px 5px", borderRadius: 3, background: "#3B82F622", color: "#93C5FD" }}>Pending Invite</span>}
                 </div>
-                <div style={{ fontSize: 11, color: "#5E5E72" }}>{m.profile?.role || "No title"}</div>
+                <div style={{ fontSize: 11, color: "var(--t-muted, #888)" }}>{m.profile?.role || "No title"}</div>
                 {memberProjects.length > 0 && <div style={{ display: "flex", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
                   {memberProjects.map((p) => {
                     const projRole = p.team.find((t) => t.id === m.user_id)?.memberRole || "—";
-                    return <span key={p.id} style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "#0F0F16", color: "#9898AE", border: "1px solid #252535" }}>{p.name} <span style={{ color: "#5E5E72" }}>({projRole})</span></span>;
+                    return <span key={p.id} style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "var(--t-card, #202020)", color: "var(--t-text2, #888)", border: "1px solid #252535" }}>{p.name} <span style={{ color: "var(--t-muted, #888)" }}>({projRole})</span></span>;
                   })}
                 </div>}
               </div>
@@ -120,17 +120,17 @@ export default function OrgTeam({ org, orgMembers, projects, userId, onReload })
                 {isOrgAdmin && m.user_id !== userId && <select value={m.org_role} onChange={(e) => updateOrgRole(m.id, e.target.value)} style={{ ...sl, padding: "4px 8px", fontSize: 11, width: 90 }}>
                   {myOrgRole === "owner" && <option value="owner">Owner</option>}<option value="admin">Admin</option><option value="member">Member</option>
                 </select>}
-                {!isOrgAdmin && <span style={{ fontSize: 10, color: "#5E5E72", fontFamily: M }}>{m.org_role}</span>}
+                {!isOrgAdmin && <span style={{ fontSize: 10, color: "var(--t-muted, #888)", fontFamily: M }}>{m.org_role}</span>}
                 {isOrgAdmin && !m.joined_at && <button disabled={actionLoading === m.user_id} onClick={() => doAction("resend", m.user_id)}
-                  style={{ ...bs, background: "#3B82F6", color: "white", padding: "4px 10px", fontSize: 11 }}>
+                  style={{ ...bs, background: "#2F80ED", color: "white", padding: "4px 10px", fontSize: 11 }}>
                   {actionLoading === m.user_id ? "…" : "Resend"}
                 </button>}
                 {isOrgAdmin && m.user_id !== userId && (isInactive
-                  ? <button onClick={() => doAction("reactivate", m.user_id)} style={{ ...bs, background: "#10B981", color: "white", padding: "4px 10px", fontSize: 11 }}>Reactivate</button>
+                  ? <button onClick={() => doAction("reactivate", m.user_id)} style={{ ...bs, background: "#0F7B6C", color: "white", padding: "4px 10px", fontSize: 11 }}>Reactivate</button>
                   : <button onClick={() => doAction("deactivate", m.user_id)} style={{ ...bs, background: "#CA8A04", color: "white", padding: "4px 10px", fontSize: 11 }}>Deactivate</button>
                 )}
                 {isOrgAdmin && m.user_id !== userId && <button onClick={() => { if (confirm(`Remove ${m.profile?.name || "this user"} permanently?`)) doAction("delete", m.user_id); }}
-                  style={{ ...bs, background: "#252535", color: "#EF4444", padding: "4px 10px", fontSize: 11 }}>Delete</button>}
+                  style={{ ...bs, background: "var(--t-border, #333)", color: "#E03E3E", padding: "4px 10px", fontSize: 11 }}>Delete</button>}
               </div>
             </div>
           );
