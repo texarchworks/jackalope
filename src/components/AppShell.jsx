@@ -468,9 +468,22 @@ export default function AppShell() {
 
   // ── MAIN APPLICATION ──
   return (
-    <div style={{ fontFamily: F, background: "transparent", color: "#F0F0F5", minHeight: "100vh", display: "flex" }}>
+    <div style={{ fontFamily: F, background: "#050507", color: "#F0F0F5", minHeight: "100vh", display: "flex", position: "relative", overflow: "hidden" }}>
+      {/* Animated gradient background */}
+      <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", width: "120%", height: "120%", top: "-10%", left: "-10%",
+          background: "radial-gradient(ellipse 600px 400px at 20% 80%, rgba(59,130,246,.12) 0%, transparent 70%), radial-gradient(ellipse 500px 350px at 80% 20%, rgba(16,185,129,.09) 0%, transparent 70%), radial-gradient(ellipse 450px 500px at 50% 50%, rgba(139,92,246,.07) 0%, transparent 70%)",
+          animation: "gradientDrift 20s ease-in-out infinite alternate",
+        }} />
+        {/* Glass orbs */}
+        <div style={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", top: "15%", left: "10%", background: "radial-gradient(circle, rgba(59,130,246,.1) 0%, transparent 70%)", filter: "blur(40px)", animation: "bubbleFloat 25s ease-in-out infinite alternate" }} />
+        <div style={{ position: "absolute", width: 200, height: 200, borderRadius: "50%", top: "60%", right: "15%", background: "radial-gradient(circle, rgba(16,185,129,.08) 0%, transparent 70%)", filter: "blur(30px)", animation: "bubbleFloat 30s ease-in-out infinite alternate-reverse" }} />
+        <div style={{ position: "absolute", width: 250, height: 250, borderRadius: "50%", top: "5%", right: "30%", background: "radial-gradient(circle, rgba(139,92,246,.08) 0%, transparent 70%)", filter: "blur(35px)", animation: "bubbleFloat 22s ease-in-out infinite alternate" }} />
+        <div style={{ position: "absolute", width: 150, height: 150, borderRadius: "50%", bottom: "10%", left: "40%", background: "radial-gradient(circle, rgba(245,158,11,.06) 0%, transparent 70%)", filter: "blur(25px)", animation: "bubbleFloat 28s ease-in-out infinite alternate-reverse" }} />
+      </div>
       {/* SIDEBAR */}
-      <aside style={{ width: 240, background: "rgba(10,10,15,.82)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,.06)", display: "flex", flexDirection: "column", flexShrink: 0, height: "100vh", position: "sticky", top: 0 }}>
+      <aside style={{ width: 240, background: "rgba(10,10,15,.88)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,.06)", display: "flex", flexDirection: "column", flexShrink: 0, height: "100vh", position: "sticky", top: 0, zIndex: 2 }}>
         <div style={{ padding: "20px 18px 16px", borderBottom: "1px solid #1A1A28" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 34, height: 34, background: "#3B82F6", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, color: "#050507", letterSpacing: "-0.04em" }}>J</div>
@@ -514,7 +527,7 @@ export default function AppShell() {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main style={{ flex: 1, padding: "24px 28px", overflowY: "auto", maxHeight: "100vh" }}>
+      <main style={{ flex: 1, padding: "24px 28px", overflowY: "auto", maxHeight: "100vh", position: "relative", zIndex: 2 }}>
         {page === "mywork" && profile && (
           <MyWork user={profile} projects={projects} goProj={goProj} goEditTask={goEditTask} onUpdateTask={updateTaskLocal} />
         )}
