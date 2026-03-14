@@ -731,7 +731,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
                     <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
                       {loc&&<Tg bg={loc.color} fg="white">{p.locLabel} {task.loc}</Tg>}
                       <Tg bg={PRI[task.priority].bg} fg={PRI[task.priority].color}>{PRI[task.priority].label}</Tg>
-                      <Tg bg=T.borderSubtle fg=T.textSecondary>{task.category}</Tg>
+                      <Tg bg={T.borderSubtle} fg={T.textSecondary}>{task.category}</Tg>
                       {a&&<Tg bg="#EFF6FF" fg="#3B82F6">{a.name}</Tg>}
                       {task.dueDate&&<span style={{fontSize:9,padding:"2px 5px",borderRadius:3,background:T.borderSubtle,color:T.textSecondary,fontFamily:M}}>{task.dueDate}</span>}
                     </div>
