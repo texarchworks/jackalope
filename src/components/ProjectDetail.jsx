@@ -41,7 +41,7 @@ function TaskForm({ task, onChange, onSubmit, btnLabel, team, locs, subs, cats, 
     </div>
     <div><label style={lb}>Categories</label>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {cats.map((c) => <button key={c} type="button" onClick={() => toggleCat(c)} style={{ padding: "4px 10px", borderRadius: 4, border: `1px solid ${selCats.includes(c) ? "#2F80ED" : "var(--t-border, #252535)"}`, background: selCats.includes(c) ? "#2F80ED20" : "rgba(20,20,29,.5)", color: selCats.includes(c) ? "#93C5FD" : "var(--t-muted, #5E5E72)", fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all .15s" }}>{c}</button>)}
+        {cats.map((c) => <button key={c} type="button" onClick={() => toggleCat(c)} style={{ padding: "4px 10px", borderRadius: 4, border: `1px solid ${selCats.includes(c) ? T?.text||"var(--t-text, #FFF)" : "var(--t-border, #252535)"}`, background: selCats.includes(c) ? (T?.text||"#FFF")+"18" : T?.bgElevated||"var(--t-elevated, #252525)", color: selCats.includes(c) ? "#93C5FD" : "var(--t-muted, #5E5E72)", fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all .15s" }}>{c}</button>)}
         {cats.length === 0 && <span style={{ fontSize: 11, color: "var(--t-muted, #5E5E72)" }}>No categories defined. Add in Settings.</span>}
       </div>
     </div>
@@ -276,18 +276,18 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         <div><h2 style={{ margin:0,fontSize:22,fontWeight:700 }}>{p.name}</h2><p style={{ margin:0,fontSize:12,color:T.textMuted }}>{p.subtitle}</p></div>
       </div>
       <div style={{ display:"flex", gap:8 }}>
-        <button onClick={()=>{setEditProjData({name:p.name,subtitle:p.subtitle||"",icon:p.icon,color:p.color,locLabel:p.locLabel,subLabel:p.subLabel});setShowEditProject(true);}} style={{...bs,background:T.bgElevated,color:T.textSecondary}}>✎ Edit</button>
-        <button onClick={()=>{setShowSettings(true);setSTab("team");loadAllUsers();}} style={{...bs,background:T.bgElevated,color:T.textSecondary}}>⚙ Settings</button>
-        {permissions.canCreate&&<button onClick={()=>setShowM(true)} style={{...bs,background:"#2F80ED",color:"white"}}>✦ Scrub Notes</button>}
-        {permissions.canCreate&&<button onClick={()=>setShowC(true)} style={{...bs,background:"#0F7B6C",color:"white"}}>+ New Task</button>}
+        <button onClick={()=>{setEditProjData({name:p.name,subtitle:p.subtitle||"",icon:p.icon,color:p.color,locLabel:p.locLabel,subLabel:p.subLabel});setShowEditProject(true);}} style={{...bs,background:T.text,color:T.bg}}>✎ Edit</button>
+        <button onClick={()=>{setShowSettings(true);setSTab("team");loadAllUsers();}} style={{...bs,background:T.text,color:T.bg}}>⚙ Settings</button>
+        {permissions.canCreate&&<button onClick={()=>setShowM(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}}>✦ Scrub Notes</button>}
+        {permissions.canCreate&&<button onClick={()=>setShowC(true)} style={{...bs,background:T.text,color:T.bg,fontWeight:600}}>+ New Task</button>}
       </div>
     </div>
     <div style={{ display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10,marginBottom:16 }}>
-      {[{l:"Total",v:st.tot,c:"#5FA8D3"},{l:"Open",v:st.opn,c:"#E03E3E"},{l:"In Prog",v:st.prg,c:"#2F80ED"},{l:"Blocked",v:st.blk,c:T.textMuted},{l:"Critical",v:st.crt,c:"#E03E3E"},{l:"Unassigned",v:st.una,c:"#CA8A04"}].map((s,i)=>(
+      {[{l:"Total",v:st.tot,c:T.textMuted},{l:"Open",v:st.opn,c:"#E03E3E"},{l:"In Prog",v:st.prg,c:"#2F80ED"},{l:"Blocked",v:st.blk,c:T.textMuted},{l:"Critical",v:st.crt,c:"#E03E3E"},{l:"Unassigned",v:st.una,c:T.textMuted}].map((s,i)=>(
         <div key={i} style={{background:T.bgInput,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",border:`1px solid ${T.border}`,borderRadius:8,padding:"10px 12px",position:"relative"}}><div style={{position:"absolute",top:0,left:0,width:3,height:"100%",background:s.c}} /><div style={{fontSize:10,color:T.textMuted,textTransform:"uppercase",fontFamily:M,marginBottom:2}}>{s.l}</div><div style={{fontSize:22,fontWeight:700,color:s.c}}>{s.v}</div></div>))}
     </div>
     {p.locs.length>0&&<div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
-      <button onClick={()=>setSL("all")} style={{padding:"5px 10px",borderRadius:6,border:`1px solid ${T.border}`,cursor:"pointer",fontSize:12,fontWeight:500,background:sL==="all"?"#2F80ED":"rgba(20,20,29,.5)",color:sL==="all"?"white":T.textSecondary}}>All {p.locLabel}s</button>
+      <button onClick={()=>setSL("all")} style={{padding:"5px 10px",borderRadius:6,border:`1px solid ${T.border}`,cursor:"pointer",fontSize:12,fontWeight:500,background:sL==="all"?T.text:T.bgElevated,color:sL==="all"?T.bg:T.textSecondary}}>All {p.locLabel}s</button>
       {p.locs.map((l)=><button key={l.id} onClick={()=>setSL(l.id)} style={{padding:"5px 10px",borderRadius:6,border:`1px solid ${sL===l.id?l.accent:T.border}`,cursor:"pointer",fontSize:12,fontWeight:500,background:sL===l.id?l.color:"rgba(20,20,29,.5)",color:sL===l.id?"white":T.textSecondary}}><span style={{width:7,height:7,borderRadius:"50%",background:l.accent,display:"inline-block",marginRight:4}} />{l.id}{lSt.find((s)=>s.id===l.id)?.tot>0&&<span style={{marginLeft:4,background:"rgba(255,255,255,.15)",borderRadius:8,padding:"0 5px",fontSize:10}}>{lSt.find((s)=>s.id===l.id)?.tot}</span>}</button>)}
     </div>}
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
@@ -299,7 +299,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         {allSubs.length>0&&<select value={fSub} onChange={(e)=>setFSub(e.target.value)} style={{...sl,padding:"7px 8px",fontSize:12}}><option value="all">All {p.subLabel}s</option><option value="">No {p.subLabel}</option>{(sL!=="all"?(p.subs[sL]||[]):allSubs).map((s)=><option key={s.id} value={s.id}>{s.id}: {s.name}</option>)}</select>}
       </div>
       <div style={{display:"flex",background:T.bgElevated,borderRadius:6,border:`1px solid ${T.border}`,overflow:"hidden"}}>
-        {["board","list","canvas"].map((v)=><button key={v} onClick={()=>setVw(v)} style={{padding:"6px 14px",fontSize:12,fontWeight:500,border:"none",cursor:"pointer",background:vw===v?"#2F80ED":"transparent",color:vw===v?"white":T.textMuted,textTransform:"capitalize"}}>{v}</button>)}
+        {["board","list","canvas"].map((v)=><button key={v} onClick={()=>setVw(v)} style={{padding:"6px 14px",fontSize:12,fontWeight:500,border:"none",cursor:"pointer",background:vw===v?T.text:"transparent",color:vw===v?T.bg:T.textMuted,textTransform:"capitalize"}}>{v}</button>)}
       </div>
     </div>
     </div>{/* END FIXED HEADER */}
@@ -310,10 +310,10 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
     {vw==="board"&&<>
       <div style={{display:"flex",gap:6,marginBottom:8,alignItems:"center",flexWrap:"wrap"}}>
         <span style={{fontSize:10,color:T.textMuted}}>Group by:</span>
-        {[{id:"status",label:"Status"},{id:"priority",label:"Priority"},{id:"assignee",label:"Assignee"},{id:"location",label:p.locLabel},{id:"sublocation",label:p.subLabel}].map((g)=><button key={g.id} onClick={()=>setBoardGroup(g.id)} style={{...bs,padding:"3px 10px",fontSize:11,background:boardGroup===g.id?"#2F80ED":"rgba(20,20,29,.5)",color:boardGroup===g.id?"white":T.textMuted}}>{g.label}</button>)}
+        {[{id:"status",label:"Status"},{id:"priority",label:"Priority"},{id:"assignee",label:"Assignee"},{id:"location",label:p.locLabel},{id:"sublocation",label:p.subLabel}].map((g)=><button key={g.id} onClick={()=>setBoardGroup(g.id)} style={{...bs,padding:"3px 10px",fontSize:11,background:boardGroup===g.id?T.text:T.bgElevated,color:boardGroup===g.id?T.bg:T.textMuted}}>{g.label}</button>)}
         <div style={{width:1,height:16,background:T.border,margin:"0 4px"}} />
         <span style={{fontSize:10,color:T.textMuted}}>Sort:</span>
-        {["priority","deadline"].map((s)=><button key={s} onClick={()=>setBoardSort(s)} style={{...bs,padding:"3px 10px",fontSize:11,background:boardSort===s?"#2F80ED33":"rgba(20,20,29,.5)",color:boardSort===s?"#93C5FD":T.textMuted}}>{s==="priority"?"Priority":"Due Date"}</button>)}
+        {["priority","deadline"].map((s)=><button key={s} onClick={()=>setBoardSort(s)} style={{...bs,padding:"3px 10px",fontSize:11,background:boardSort===s?T.text:T.bgElevated,color:boardSort===s?T.bg:T.textMuted}}>{s==="priority"?"Priority":"Due Date"}</button>)}
       </div>
       {boardGroup==="status"&&<div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,overflowX:"auto"}}>
       {Object.entries(STA).map(([status,cfg])=>{const col=sortByBoard(fil.filter((t)=>t.status===status));return(
@@ -553,7 +553,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
     {showSettings&&<Modal onClose={()=>setShowSettings(false)} title="Project Settings" wide>
       <div style={{display:"flex",gap:0,marginBottom:20,borderBottom:`1px solid ${T.border}`}}>
         {[{id:"team",label:"Team Members"},{id:"locations",label:`${p.locLabel}s & ${p.subLabel}s`},{id:"categories",label:"Categories"}].map((t)=>(
-          <button key={t.id} onClick={()=>setSTab(t.id)} style={{padding:"10px 20px",fontSize:13,fontWeight:600,border:"none",borderBottom:sTab===t.id?"2px solid #2F80ED":"2px solid transparent",cursor:"pointer",background:"transparent",color:sTab===t.id?T.text:T.textMuted,fontFamily:F}}>{t.label}</button>))}
+          <button key={t.id} onClick={()=>setSTab(t.id)} style={{padding:"10px 20px",fontSize:13,fontWeight:600,border:"none",borderBottom:sTab===t.id?`2px solid ${T.text}`:"2px solid transparent",cursor:"pointer",background:"transparent",color:sTab===t.id?T.text:T.textMuted,fontFamily:F}}>{t.label}</button>))}
       </div>
 
       {sTab==="team"&&<div style={{display:"flex",flexDirection:"column",gap:16}}>
@@ -638,7 +638,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         <div style={{fontSize:13,fontWeight:600}}>Current {p.locLabel}s ({p.locs.length})</div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {p.locs.map((loc)=>{const locSubs=p.subs[loc.id]||[];const isEditing=editLoc?._origCode===loc.id;return(
-            <div key={loc.id} style={{background:T.bgElevated,border:`1px solid ${isEditing?"#2F80ED":T.border}`,borderRadius:8,padding:"12px 14px"}}>
+            <div key={loc.id} style={{background:T.bgElevated,border:`1px solid ${isEditing?T.text:T.border}`,borderRadius:8,padding:"12px 14px"}}>
               {isEditing?<div style={{display:"flex",flexDirection:"column",gap:10}}>
                 <div style={{display:"grid",gridTemplateColumns:"80px 1fr 1fr",gap:8}}>
                   <div><label style={lb}>Code</label><input value={editLoc.code} onChange={(e)=>setEditLoc({...editLoc,code:e.target.value})} style={{...ins,width:"100%"}} /></div>
@@ -648,7 +648,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
                 <div><label style={lb}>Color</label><div style={{display:"flex",gap:5}}>{TEAM_COLORS.map((c)=><div key={c} onClick={()=>setEditLoc({...editLoc,color:c})} style={{width:20,height:20,borderRadius:"50%",background:c,cursor:"pointer",border:editLoc.color===c?"2px solid white":"2px solid transparent"}} />)}</div></div>
                 <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
                   <button onClick={()=>setEditLoc(null)} style={{...bs,background:T.border,color:T.textSecondary,padding:"4px 12px",fontSize:11}}>Cancel</button>
-                  <button onClick={saveLocation} style={{...bs,background:"#2F80ED",color:"white",padding:"4px 12px",fontSize:11}}>Save</button>
+                  <button onClick={saveLocation} style={{...bs,background:T.text,color:T.bg,padding:"4px 12px",fontSize:11}}>Save</button>
                 </div>
               </div>
               :<>
@@ -662,10 +662,10 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
               </div>
               {locSubs.length>0&&<div style={{marginLeft:22,display:"flex",flexDirection:"column",gap:4}}>
                 {locSubs.map((s)=>{const isEditingSub=editSub?._origCode===s.id;const subTaskCount=p.tasks.filter((t)=>t.sub===s.id).length;return isEditingSub?(
-                  <div key={s.id} style={{display:"flex",alignItems:"center",gap:8,background:T.bgCard,border:"1px solid #2F80ED",borderRadius:6,padding:"8px 12px"}}>
+                  <div key={s.id} style={{display:"flex",alignItems:"center",gap:8,background:T.bgCard,border:`1px solid ${T.text}`,borderRadius:6,padding:"8px 12px"}}>
                     <div style={{flex:0}}><label style={{...lb,marginBottom:0,fontSize:9}}>Code</label><input value={editSub.code} onChange={(e)=>setEditSub({...editSub,code:e.target.value})} style={{...ins,padding:"4px 8px",fontSize:12,width:80}} /></div>
                     <div style={{flex:1}}><label style={{...lb,marginBottom:0,fontSize:9}}>Name</label><input value={editSub.name} onChange={(e)=>setEditSub({...editSub,name:e.target.value})} style={{...ins,padding:"4px 8px",fontSize:12,width:"100%"}} onKeyDown={(e)=>{if(e.key==="Enter")saveSubLocation();if(e.key==="Escape")setEditSub(null);}} /></div>
-                    <button onClick={saveSubLocation} style={{...bs,background:"#2F80ED",color:"white",padding:"4px 10px",fontSize:11,marginTop:12}}>Save</button>
+                    <button onClick={saveSubLocation} style={{...bs,background:T.text,color:T.bg,padding:"4px 10px",fontSize:11,marginTop:12}}>Save</button>
                     <button onClick={()=>setEditSub(null)} style={{...bs,background:T.border,color:T.textSecondary,padding:"4px 10px",fontSize:11,marginTop:12}}>Cancel</button>
                   </div>
                 ):(
@@ -719,7 +719,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
           <label style={lb}>Meeting Notes / Minutes</label>
           <p style={{fontSize:12,color:T.textMuted,margin:"0 0 8px"}}>Paste text to extract action items, {p.locLabel.toLowerCase()}s, assignees, and due dates.</p>
           <textarea value={notes} onChange={(e)=>setNotes(e.target.value)} rows={16} style={{...ins,width:"100%",resize:"vertical",fontFamily:M,fontSize:12,lineHeight:1.7}} placeholder="Paste meeting notes here…" />
-          <button onClick={scrub} disabled={!notes.trim()} style={{...bs,background:notes.trim()?"#2F80ED":T.border,color:notes.trim()?"white":T.textMuted,width:"100%",padding:"12px",fontWeight:600,marginTop:12}}>✦ Extract Action Items</button>
+          <button onClick={scrub} disabled={!notes.trim()} style={{...bs,background:notes.trim()?T.text:T.border,color:notes.trim()?T.bg:T.textMuted,width:"100%",padding:"12px",fontWeight:600,marginTop:12}}>✦ Extract Action Items</button>
         </div>
         {showX&&ext.length>0&&<div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
@@ -728,9 +728,9 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
           </div>
           <div style={{maxHeight:430,overflowY:"auto",display:"flex",flexDirection:"column",gap:6}}>
             {ext.map((task,i)=>{const loc=p.locs.find((l)=>l.id===task.loc),a=tm.find((m)=>m.id===task.assignee);return(
-              <div key={i} style={{background:task.sel?"rgba(20,20,29,.5)":"rgba(5,5,7,.4)",border:`1px solid ${task.sel?"#2F80ED":T.border}`,borderRadius:6,padding:"10px 12px",cursor:"pointer"}} onClick={()=>setExt((x)=>x.map((t,j)=>j===i?{...t,sel:!t.sel}:t))}>
+              <div key={i} style={{background:task.sel?"rgba(20,20,29,.5)":"rgba(5,5,7,.4)",border:`1px solid ${task.sel?T.text:T.border}`,borderRadius:6,padding:"10px 12px",cursor:"pointer"}} onClick={()=>setExt((x)=>x.map((t,j)=>j===i?{...t,sel:!t.sel}:t))}>
                 <div style={{display:"flex",gap:8}}>
-                  <div style={{width:18,height:18,borderRadius:3,border:`2px solid ${task.sel?"#2F80ED":T.textDim}`,background:task.sel?"#2F80ED":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>{task.sel&&<span style={{color:"white",fontSize:10}}>✓</span>}</div>
+                  <div style={{width:18,height:18,borderRadius:3,border:`2px solid ${task.sel?T.text:T.textDim}`,background:task.sel?T.text:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>{task.sel&&<span style={{color:"white",fontSize:10}}>✓</span>}</div>
                   <div style={{flex:1}}>
                     <div style={{fontSize:12,fontWeight:500,marginBottom:4}}>{task.title}</div>
                     <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
@@ -772,7 +772,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
             <div style={{background:T.bgCard,borderRadius:6,padding:"8px 12px"}}><div style={{fontSize:9,color:T.textMuted,fontFamily:M,marginBottom:2}}>Created</div><span style={{fontSize:12,color:T.textMuted}}>{task.created}</span></div>
           </div>
           <div style={{display:"flex",gap:8}}>
-            <button onClick={()=>{setExpandCard(null);opnE(task);}} style={{...bs,background:"#2F80ED",color:"white",fontSize:12}}>✎ Edit Task</button>
+            <button onClick={()=>{setExpandCard(null);opnE(task);}} style={{...bs,background:T.text,color:T.bg,fontSize:12}}>✎ Edit Task</button>
             {permissions.canCreate&&<button onClick={()=>{setExpandCard(null);startAddSub(task.id);}} style={{...bs,background:"#0F7B6C",color:"white",fontSize:12}}>+ Add Sub-Task</button>}
           </div>
         </div>
@@ -782,7 +782,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
             <div style={{fontSize:13,fontWeight:600}}>Sub-Tasks{progress&&<span style={{marginLeft:6,fontSize:11,color:T.textMuted,fontFamily:M}}>{progress.rv}/{progress.tot}</span>}</div>
             {permissions.canCreate&&<button onClick={()=>{setExpandCard(null);startAddSub(task.id);}} style={{...bs,background:T.bgElevated,color:T.textSecondary,padding:"3px 10px",fontSize:11}}>+ Add</button>}
           </div>
-          {progress&&<div style={{height:3,background:T.border,borderRadius:2,marginBottom:10,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.round(progress.rv/progress.tot*100)}%`,background:progress.rv===progress.tot?"#0F7B6C":"#2F80ED",borderRadius:2}} /></div>}
+          {progress&&<div style={{height:3,background:T.border,borderRadius:2,marginBottom:10,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.round(progress.rv/progress.tot*100)}%`,background:progress.rv===progress.tot?"#0F7B6C":T.text,borderRadius:2}} /></div>}
           {children.length===0&&<div style={{padding:20,textAlign:"center",color:T.textDim,fontSize:12}}>No sub-tasks yet</div>}
           <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:400,overflowY:"auto"}}>
             {children.map((ch)=>{const cPr=PRI[ch.priority],cSta=STA[ch.status],cA=tm.find((m)=>m.id===ch.assignee);
@@ -841,7 +841,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
           {permissions.isAdmin&&<button onClick={()=>{setShowEditProject(false);setShowDeleteProject(true);setDeleteConfirmName("");}} style={{...bs,background:"transparent",color:"#E03E3E",border:"1px solid #E03E3E33",padding:"10px 20px",fontSize:13}}>Delete Project</button>}
           <div style={{display:"flex",gap:8,marginLeft:"auto"}}>
             <button onClick={()=>setShowEditProject(false)} style={{...bs,background:T.bgElevated,color:T.textSecondary,padding:"10px 20px"}}>Cancel</button>
-            <button onClick={()=>{onEditProject(editProjData);setShowEditProject(false);}} style={{...bs,background:"#2F80ED",color:"white",padding:"10px 20px",fontWeight:600}}>Save Changes</button>
+            <button onClick={()=>{onEditProject(editProjData);setShowEditProject(false);}} style={{...bs,background:T.text,color:T.bg,padding:"10px 20px",fontWeight:600}}>Save Changes</button>
           </div>
         </div>
       </div>
