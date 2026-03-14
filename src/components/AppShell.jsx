@@ -392,6 +392,31 @@ export default function AppShell() {
     return null;
   };
 
+  const editProject = async (projId, updates) => {
+    const dbUpdates = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.subtitle !== undefined) dbUpdates.subtitle = updates.subtitle;
+    if (updates.icon !== undefined) dbUpdates.icon = updates.icon;
+    if (updates.color !== undefined) dbUpdates.color = updates.color;
+    if (updates.locLabel !== undefined) dbUpdates.loc_label = updates.locLabel;
+    if (updates.subLabel !== undefined) dbUpdates.sub_label = updates.subLabel;
+    await supabase.from("projects").update(dbUpdates).eq("id", projId);
+    await loadProjects();
+  };
+
+  const deleteProject = async (projId) => {
+    // Delete all tasks, locations, sub_locations, categories, project_members for this project
+    await supabase.from("tasks").delete().eq("project_id", projId);
+    await supabase.from("sub_locations").delete().eq("project_id", projId);
+    await supabase.from("locations").delete().eq("project_id", projId);
+    await supabase.from("categories").delete().eq("project_id", projId);
+    await supabase.from("project_members").delete().eq("project_id", projId);
+    await supabase.from("projects").delete().eq("id", projId);
+    setCurProjId(null);
+    setPage("projects");
+    await loadProjects();
+  };
+
   // ── NAVIGATION ──
   const goProj = (id) => { setCurProjId(id); setPage("project"); };
   const goEditTask = (projId, task) => { setCurProjId(projId); setPage("project"); };
@@ -579,6 +604,8 @@ export default function AppShell() {
               onUpdateTask={(taskId, updates) => updateTaskLocal(curProj.id, taskId, updates)}
               onDeleteTask={(taskId) => deleteTask(curProj.id, taskId)}
               onReload={loadProjects}
+              onEditProject={(updates) => editProject(curProj.id, updates)}
+              onDeleteProject={() => deleteProject(curProj.id)}
               theme={T}
             />
           </>
