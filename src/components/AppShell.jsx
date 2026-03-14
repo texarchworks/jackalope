@@ -540,7 +540,7 @@ export default function AppShell() {
         <nav style={{ flex: 1, padding: "12px 10px", overflowY: "auto" }}>
           {[{ id: "mywork", label: "My Work", icon: "◐" }, { id: "projects", label: "Projects", icon: "▣" }, { id: "team", label: "Team", icon: "◉" }].map((n) => (
             <button key={n.id} onClick={() => { setPage(n.id); setCurProjId(null); }}
-              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: page === n.id ? 600 : 400, background: page === n.id ? "rgba(20,20,29,.6)" : "transparent", color: page === n.id ? T.text : T.textMuted, marginBottom: 4, textAlign: "left", fontFamily: F }}>
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: page === n.id ? 600 : 400, background: page === n.id ? T.text : "transparent", color: page === n.id ? T.bg : T.textMuted, marginBottom: 4, textAlign: "left", fontFamily: F }}>
               <span style={{ fontSize: 14 }}>{n.icon}</span>{n.label}
             </button>
           ))}
@@ -548,7 +548,7 @@ export default function AppShell() {
           <div style={{ fontSize: 10, color: "#3A3A48", textTransform: "uppercase", fontFamily: M, padding: "16px 12px 6px", letterSpacing: ".08em" }}>Projects</div>
           {projects.map((p) => (
             <button key={p.id} onClick={() => goProj(p.id)}
-              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12, fontWeight: curProjId === p.id && page === "project" ? 600 : 400, background: curProjId === p.id && page === "project" ? "rgba(20,20,29,.6)" : "transparent", color: curProjId === p.id && page === "project" ? T.text : T.textMuted, marginBottom: 2, textAlign: "left", fontFamily: F }}>
+              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12, fontWeight: curProjId === p.id && page === "project" ? 600 : 400, background: curProjId === p.id && page === "project" ? T.text : "transparent", color: curProjId === p.id && page === "project" ? T.bg : T.textMuted, marginBottom: 2, textAlign: "left", fontFamily: F }}>
               <div style={{ width: 22, height: 22, borderRadius: 5, background: p.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "white", flexShrink: 0 }}>{p.icon}</div>
               <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
               <span style={{ marginLeft: "auto", fontSize: 10, color: "#3A3A48", fontFamily: M }}>{p.tasks.filter((t) => t.status !== "resolved").length}</span>
