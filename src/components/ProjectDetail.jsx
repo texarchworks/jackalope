@@ -55,7 +55,7 @@ function TaskForm({ task, onChange, onSubmit, btnLabel, team, locs, subs, cats, 
   </div>);
 }
 
-export default function ProjectDetail({ project: p, userId, isPM, permissions = {}, onCreateTask, onUpdateTask, onDeleteTask, onReload, theme: T = {} }) {
+export default function ProjectDetail({ project: p, userId, isPM, permissions = {}, onCreateTask, onUpdateTask, onDeleteTask, onReload, onEditProject, onDeleteProject, theme: T = {} }) {
   const allSubs = useMemo(() => Object.values(p.subs).flat(), [p.subs]);
   const tm = p.team || [];
   const [vw, setVw] = useState("board");
@@ -78,6 +78,10 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
   const [nT, setNT] = useState(emp);
   const [showSettings, setShowSettings] = useState(false);
   const [sTab, setSTab] = useState("team");
+  const [showEditProject, setShowEditProject] = useState(false);
+  const [editProjData, setEditProjData] = useState({ name: p.name, subtitle: p.subtitle || "", icon: p.icon, color: p.color, locLabel: p.locLabel, subLabel: p.subLabel });
+  const [showDeleteProject, setShowDeleteProject] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [invEmail, setInvEmail] = useState("");
   const [invName, setInvName] = useState("");
   const [invCompany, setInvCompany] = useState("");
@@ -272,7 +276,8 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         <div><h2 style={{ margin:0,fontSize:22,fontWeight:700 }}>{p.name}</h2><p style={{ margin:0,fontSize:12,color:T.textMuted }}>{p.subtitle}</p></div>
       </div>
       <div style={{ display:"flex", gap:8 }}>
-        <button onClick={()=>{setShowSettings(true);setSTab("team");loadAllUsers();}} style={{...bs,background:T.border,color:T.textSecondary}}>⚙ Settings</button>
+        <button onClick={()=>{setEditProjData({name:p.name,subtitle:p.subtitle||"",icon:p.icon,color:p.color,locLabel:p.locLabel,subLabel:p.subLabel});setShowEditProject(true);}} style={{...bs,background:T.bgElevated,color:T.textSecondary}}>✎ Edit</button>
+        <button onClick={()=>{setShowSettings(true);setSTab("team");loadAllUsers();}} style={{...bs,background:T.bgElevated,color:T.textSecondary}}>⚙ Settings</button>
         {permissions.canCreate&&<button onClick={()=>setShowM(true)} style={{...bs,background:"#2F80ED",color:"white"}}>✦ Scrub Notes</button>}
         {permissions.canCreate&&<button onClick={()=>setShowC(true)} style={{...bs,background:"#0F7B6C",color:"white"}}>+ New Task</button>}
       </div>
@@ -817,6 +822,45 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         <div style={{display:"flex",gap:12,justifyContent:"center"}}>
           <button onClick={()=>setDeleteConfirm(null)} style={{...bs,background:T.bgElevated,border:`1px solid ${T.border}`,color:T.textSecondary,padding:"10px 28px",fontSize:13,fontWeight:600}}>No, Cancel</button>
           <button onClick={()=>delT(deleteConfirm.taskId)} style={{...bs,background:"#E03E3E",color:"white",padding:"10px 28px",fontSize:13,fontWeight:600}}>Yes, Delete</button>
+        </div>
+      </div>
+    </div>}
+
+    {/* Edit Project Modal */}
+    {showEditProject&&<Modal onClose={()=>setShowEditProject(false)} title="Edit Project">
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <div><label style={lb}>Project Name</label><input value={editProjData.name} onChange={(e)=>setEditProjData({...editProjData,name:e.target.value})} style={{...ins,width:"100%"}} /></div>
+        <div><label style={lb}>Subtitle / Description</label><input value={editProjData.subtitle} onChange={(e)=>setEditProjData({...editProjData,subtitle:e.target.value})} style={{...ins,width:"100%"}} /></div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:12}}>
+          <div><label style={lb}>Icon</label><input value={editProjData.icon} onChange={(e)=>setEditProjData({...editProjData,icon:e.target.value})} maxLength={3} style={{...ins,width:"100%",textAlign:"center"}} /></div>
+          <div><label style={lb}>Color</label><input type="color" value={editProjData.color} onChange={(e)=>setEditProjData({...editProjData,color:e.target.value})} style={{...ins,width:"100%",height:42,padding:4,cursor:"pointer"}} /></div>
+          <div><label style={lb}>Location Label</label><input value={editProjData.locLabel} onChange={(e)=>setEditProjData({...editProjData,locLabel:e.target.value})} placeholder="Zone" style={{...ins,width:"100%"}} /></div>
+          <div><label style={lb}>Sub-Location Label</label><input value={editProjData.subLabel} onChange={(e)=>setEditProjData({...editProjData,subLabel:e.target.value})} placeholder="Building" style={{...ins,width:"100%"}} /></div>
+        </div>
+        <div style={{display:"flex",gap:8,justifyContent:"space-between"}}>
+          {permissions.isAdmin&&<button onClick={()=>{setShowEditProject(false);setShowDeleteProject(true);setDeleteConfirmName("");}} style={{...bs,background:"transparent",color:"#E03E3E",border:"1px solid #E03E3E33",padding:"10px 20px",fontSize:13}}>Delete Project</button>}
+          <div style={{display:"flex",gap:8,marginLeft:"auto"}}>
+            <button onClick={()=>setShowEditProject(false)} style={{...bs,background:T.bgElevated,color:T.textSecondary,padding:"10px 20px"}}>Cancel</button>
+            <button onClick={()=>{onEditProject(editProjData);setShowEditProject(false);}} style={{...bs,background:"#2F80ED",color:"white",padding:"10px 20px",fontWeight:600}}>Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </Modal>}
+
+    {/* Delete Project Modal */}
+    {showDeleteProject&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1200,backdropFilter:"blur(8px)"}} onClick={()=>setShowDeleteProject(false)}>
+      <div onClick={(e)=>e.stopPropagation()} style={{background:"var(--t-modal, rgba(25,25,25,.95))",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderRadius:16,border:"1px solid #E03E3E33",padding:"32px 36px",width:460,maxWidth:"90vw",textAlign:"center",boxShadow:"var(--t-shadow, 0 16px 48px rgba(0,0,0,.4))"}}>
+        <div style={{width:56,height:56,borderRadius:"50%",background:"#E03E3E15",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:26}}>🗑</div>
+        <h3 style={{margin:"0 0 8px",fontSize:20,fontWeight:700,color:T.text}}>Delete Project</h3>
+        <p style={{margin:"0 0 6px",fontSize:14,color:T.textSecondary,lineHeight:1.5}}>This will permanently delete <strong style={{color:T.text}}>"{p.name}"</strong> and all its tasks, locations, and team assignments.</p>
+        <p style={{margin:"0 0 20px",fontSize:12,color:"#E03E3E"}}>This action cannot be undone.</p>
+        <div style={{marginBottom:20}}>
+          <label style={{...lb,textAlign:"left"}}>Type "{p.name}" to confirm</label>
+          <input value={deleteConfirmName} onChange={(e)=>setDeleteConfirmName(e.target.value)} placeholder={p.name} style={{...ins,width:"100%",textAlign:"center",fontSize:14}} autoFocus />
+        </div>
+        <div style={{display:"flex",gap:12,justifyContent:"center"}}>
+          <button onClick={()=>setShowDeleteProject(false)} style={{...bs,background:T.bgElevated,color:T.textSecondary,padding:"10px 28px",fontSize:13,fontWeight:600}}>Cancel</button>
+          <button disabled={deleteConfirmName!==p.name} onClick={()=>{onDeleteProject();setShowDeleteProject(false);}} style={{...bs,background:deleteConfirmName===p.name?"#E03E3E":"#E03E3E44",color:deleteConfirmName===p.name?"white":"#E03E3E66",padding:"10px 28px",fontSize:13,fontWeight:600,cursor:deleteConfirmName===p.name?"pointer":"not-allowed"}}>Yes, Delete Project</button>
         </div>
       </div>
     </div>}
