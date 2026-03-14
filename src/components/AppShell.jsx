@@ -397,7 +397,7 @@ export default function AppShell() {
   // ── LOGIN SCREEN ──
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#050507" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "transparent" }}>
         <div style={{ textAlign: "center" }}>
           <div style={{ width: 48, height: 48, background: "#3B82F6", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 20, color: "#050507", margin: "0 auto 16px" }}>J</div>
           <div style={{ color: "#5E5E72", fontSize: 14 }}>Loading…</div>
@@ -408,8 +408,8 @@ export default function AppShell() {
 
   if (!user) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#050507" }}>
-        <div style={{ width: 400, background: "#0F0F16", border: "1px solid #252535", borderRadius: 16, padding: "32px 36px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "transparent" }}>
+        <div style={{ width: 400, background: "rgba(15,15,22,.75)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 16, padding: "32px 36px", boxShadow: "0 24px 80px rgba(0,0,0,.5)" }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
             <div style={{ width: 52, height: 52, background: "#3B82F6", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 22, color: "#050507", margin: "0 auto 12px" }}>J</div>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Jackalope</h1>
@@ -468,9 +468,9 @@ export default function AppShell() {
 
   // ── MAIN APPLICATION ──
   return (
-    <div style={{ fontFamily: F, background: "#050507", color: "#F0F0F5", minHeight: "100vh", display: "flex" }}>
+    <div style={{ fontFamily: F, background: "transparent", color: "#F0F0F5", minHeight: "100vh", display: "flex" }}>
       {/* SIDEBAR */}
-      <aside style={{ width: 240, background: "rgba(10,10,15,.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderRight: "1px solid rgba(255,255,255,.04)", display: "flex", flexDirection: "column", flexShrink: 0, height: "100vh", position: "sticky", top: 0 }}>
+      <aside style={{ width: 240, background: "rgba(10,10,15,.82)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,.06)", display: "flex", flexDirection: "column", flexShrink: 0, height: "100vh", position: "sticky", top: 0 }}>
         <div style={{ padding: "20px 18px 16px", borderBottom: "1px solid #1A1A28" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 34, height: 34, background: "#3B82F6", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, color: "#050507", letterSpacing: "-0.04em" }}>J</div>
