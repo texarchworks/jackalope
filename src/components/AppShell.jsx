@@ -405,13 +405,15 @@ export default function AppShell() {
   };
 
   const deleteProject = async (projId) => {
-    // Delete all tasks, locations, sub_locations, categories, project_members for this project
-    await supabase.from("tasks").delete().eq("project_id", projId);
-    await supabase.from("sub_locations").delete().eq("project_id", projId);
-    await supabase.from("locations").delete().eq("project_id", projId);
-    await supabase.from("categories").delete().eq("project_id", projId);
-    await supabase.from("project_members").delete().eq("project_id", projId);
-    await supabase.from("projects").delete().eq("id", projId);
+    try {
+      const res = await fetch("/api/project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: projId }),
+      });
+      const data = await res.json();
+      if (!data.success) { console.error("Delete failed:", data.error); return; }
+    } catch (err) { console.error("Delete failed:", err); return; }
     setCurProjId(null);
     setPage("projects");
     await loadProjects();
