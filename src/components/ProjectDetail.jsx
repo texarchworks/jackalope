@@ -267,7 +267,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
   };
   const impX = async () => { for (const t of ext.filter((t) => t.sel)) { const {sel,...task} = t; await onCreateTask(task); } setExt([]); setShowX(false); setShowM(false); };
 
-  const st = { tot:p.tasks.length, opn:p.tasks.filter((t)=>t.status==="open").length, prg:p.tasks.filter((t)=>t.status==="in_progress").length, blk:p.tasks.filter((t)=>t.status==="blocked").length, crt:p.tasks.filter((t)=>t.priority==="critical").length, una:p.tasks.filter((t)=>!t.assignee).length };
+  const st = { tot:p.tasks.length, opn:p.tasks.filter((t)=>t.status==="open").length, prg:p.tasks.filter((t)=>t.status==="in_progress").length, blk:p.tasks.filter((t)=>t.status==="blocked").length, crt:p.tasks.filter((t)=>t.priority==="critical").length, una:p.tasks.filter((t)=>!t.assignee).length, res:p.tasks.filter((t)=>t.status==="resolved").length };
   const lSt = p.locs.map((l)=>({...l,tot:p.tasks.filter((t)=>t.loc===l.id).length}));
 
   return (<div style={{display:"flex",flexDirection:"column",height:"calc(100vh - 48px)"}}>
@@ -285,8 +285,15 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         {permissions.canCreate&&<button onClick={()=>setShowC(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>+ New Task</button>}
       </div>
     </div>
-    <div style={{ display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10,marginBottom:16 }}>
-      {[{l:"Total",v:st.tot,c:T.textMuted},{l:"Open",v:st.opn,c:"#E03E3E"},{l:"In Prog",v:st.prg,c:"#2F80ED"},{l:"Blocked",v:st.blk,c:T.textMuted},{l:"Critical",v:st.crt,c:"#E03E3E"},{l:"Unassigned",v:st.una,c:T.textMuted}].map((s,i)=>(
+    <div style={{background:T.bgInput,border:`1px solid ${T.border}`,borderRadius:8,padding:"10px 14px",marginBottom:10,position:"relative"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+        <span style={{fontSize:10,color:T.textMuted,textTransform:"uppercase",fontFamily:M}}>Progress</span>
+        <span style={{fontSize:12,fontWeight:600,color:"#0F7B6C"}}>{st.res} / {st.tot} Resolved ({st.tot?Math.round(st.res/st.tot*100):0}%)</span>
+      </div>
+      <div style={{height:6,background:T.border,borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${st.tot?Math.round(st.res/st.tot*100):0}%`,background:"#0F7B6C",borderRadius:3,transition:"width .3s"}} /></div>
+    </div>
+    <div style={{ display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16 }}>
+      {[{l:"Critical",v:st.crt,c:"#E03E3E"},{l:"Unassigned",v:st.una,c:T.textMuted},{l:"Open",v:st.opn,c:"#E03E3E"},{l:"In Prog",v:st.prg,c:"#2F80ED"},{l:"Blocked",v:st.blk,c:T.textMuted}].map((s,i)=>(
         <div key={i} style={{background:T.bgInput,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",border:`1px solid ${T.border}`,borderRadius:8,padding:"10px 12px",position:"relative"}}><div style={{position:"absolute",top:0,left:0,width:3,height:"100%",background:s.c}} /><div style={{fontSize:10,color:T.textMuted,textTransform:"uppercase",fontFamily:M,marginBottom:2}}>{s.l}</div><div style={{fontSize:22,fontWeight:700,color:s.c}}>{s.v}</div></div>))}
     </div>
     {p.locs.length>0&&<div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
