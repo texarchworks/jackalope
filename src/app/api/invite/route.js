@@ -11,61 +11,110 @@ function getAdmin() {
 
 export async function POST(req) {
   try {
-    const { projectId } = await req.json();
-    if (!projectId) return NextResponse.json({ error: "projectId required" }, { status: 400 });
-
+    const body = await req.json();
+    const action = body.action || "invite";
     const admin = getAdmin();
-    const errors = [];
 
-    // 1. Delete sub-tasks (tasks with parent_task_id set)
-    const { data: tasks } = await admin.from("tasks").select("id, parent_task_id").eq("project_id", projectId);
-    if (tasks && tasks.length > 0) {
-      const subTaskIds = tasks.filter((t) => t.parent_task_id).map((t) => t.id);
-      const parentTaskIds = tasks.filter((t) => !t.parent_task_id).map((t) => t.id);
-      if (subTaskIds.length > 0) {
-        const { error } = await admin.from("tasks").delete().in("id", subTaskIds);
-        if (error) errors.push("sub_tasks: " + error.message);
+    if (action === "invite") {
+      const { email, name, company, orgId, projectId, role, isExternal } = body;
+      if (!email || !name) return NextResponse.json({ error: "Name and email required" }, { status: 400 });
+
+      const isExt = isExternal || !email.toLowerCase().endsWith("@texarchworks.com");
+
+      const { data: { users } } = await admin.auth.admin.listUsers();
+      const existing = users?.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+
+      if (existing) {
+        await admin.from("profiles").update({ company: company || "", is_external: isExt }).eq("id", existing.id);
+        if (orgId && !isExt) {
+          await admin.from("org_members").upsert(
+            { org_id: orgId, user_id: existing.id, org_role: "member", joined_at: new Date().toISOString() },
+            { onConflict: "org_id,user_id" }
+          );
+        }
+        if (projectId) {
+          await admin.from("project_members").upsert(
+            { project_id: projectId, user_id: existing.id, role: role || (isExt ? "viewer" : "member") },
+            { onConflict: "project_id,user_id" }
+          );
+        }
+        return NextResponse.json({ success: true, message: `${name} already registered — added`, existing: true });
       }
-      if (parentTaskIds.length > 0) {
-        const { error } = await admin.from("tasks").delete().in("id", parentTaskIds);
-        if (error) errors.push("tasks: " + error.message);
+
+      const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
+        data: { name, company: company || "", is_external: isExt },
+        redirectTo: "https://jackalope.vercel.app",
+      });
+      if (inviteError) return NextResponse.json({ error: inviteError.message }, { status: 500 });
+
+      if (inviteData?.user?.id) {
+        await admin.from("profiles").upsert(
+          { id: inviteData.user.id, name, role: "", color: isExt ? "#6B7280" : "#2563EB", company: company || "", is_external: isExt },
+          { onConflict: "id" }
+        );
+        if (orgId && !isExt) {
+          await admin.from("org_members").upsert(
+            { org_id: orgId, user_id: inviteData.user.id, org_role: "member", invited_at: new Date().toISOString() },
+            { onConflict: "org_id,user_id" }
+          );
+        }
+        if (projectId) {
+          await admin.from("project_members").upsert(
+            { project_id: projectId, user_id: inviteData.user.id, role: role || (isExt ? "viewer" : "member") },
+            { onConflict: "project_id,user_id" }
+          );
+        }
       }
+      return NextResponse.json({ success: true, message: `Invitation sent to ${name} (${email})` });
     }
 
-    // 2. Get locations to find sub_locations by location_id
-    const { data: locations } = await admin.from("locations").select("id").eq("project_id", projectId);
-    if (locations && locations.length > 0) {
-      const locIds = locations.map((l) => l.id);
-      // Try deleting sub_locations by location_id
-      const { error: subLocErr1 } = await admin.from("sub_locations").delete().in("location_id", locIds);
-      if (subLocErr1) errors.push("sub_locations(by loc): " + subLocErr1.message);
-    }
-    // Also try by project_id in case that column exists
-    const { error: subLocErr2 } = await admin.from("sub_locations").delete().eq("project_id", projectId);
-    if (subLocErr2 && !subLocErr2.message.includes("column")) errors.push("sub_locations(by proj): " + subLocErr2.message);
-
-    // 3. Delete locations
-    const { error: locErr } = await admin.from("locations").delete().eq("project_id", projectId);
-    if (locErr) errors.push("locations: " + locErr.message);
-
-    // 4. Delete categories
-    const { error: catErr } = await admin.from("categories").delete().eq("project_id", projectId);
-    if (catErr) errors.push("categories: " + catErr.message);
-
-    // 5. Delete project_members
-    const { error: memErr } = await admin.from("project_members").delete().eq("project_id", projectId);
-    if (memErr) errors.push("members: " + memErr.message);
-
-    // 6. Delete the project
-    const { error: projErr } = await admin.from("projects").delete().eq("id", projectId);
-    if (projErr) errors.push("project: " + projErr.message);
-
-    if (errors.length > 0) {
-      return NextResponse.json({ success: false, errors }, { status: 500 });
+    if (action === "resend") {
+      const { userId } = body;
+      if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
+      const { data: { user } } = await admin.auth.admin.getUserById(userId);
+      if (!user?.email) return NextResponse.json({ error: "User not found" }, { status: 404 });
+      await admin.auth.admin.deleteUser(userId);
+      const { data: inviteData, error } = await admin.auth.admin.inviteUserByEmail(user.email, {
+        data: { name: user.user_metadata?.name || "" },
+        redirectTo: "https://jackalope.vercel.app",
+      });
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      if (inviteData?.user?.id) {
+        const { data: oldProfile } = await admin.from("profiles").select("*").eq("id", userId).single();
+        await admin.from("profiles").upsert(
+          { id: inviteData.user.id, name: oldProfile?.name || user.user_metadata?.name || "", role: oldProfile?.role || "", color: oldProfile?.color || "#2563EB", company: oldProfile?.company || "", is_external: oldProfile?.is_external || false },
+          { onConflict: "id" }
+        );
+        await admin.from("org_members").update({ user_id: inviteData.user.id }).eq("user_id", userId);
+        await admin.from("project_members").update({ user_id: inviteData.user.id }).eq("user_id", userId);
+      }
+      return NextResponse.json({ success: true, message: `Invite resent to ${user.email}` });
     }
 
-    return NextResponse.json({ success: true });
+    if (action === "delete") {
+      const { userId } = body;
+      if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
+      await admin.from("org_members").delete().eq("user_id", userId);
+      await admin.from("project_members").delete().eq("user_id", userId);
+      await admin.from("profiles").delete().eq("id", userId);
+      await admin.auth.admin.deleteUser(userId);
+      return NextResponse.json({ success: true, message: "User removed" });
+    }
+
+    if (action === "deactivate") {
+      const { userId, orgId } = body;
+      await admin.from("org_members").update({ is_active: false }).eq("user_id", userId).eq("org_id", orgId);
+      return NextResponse.json({ success: true, message: "User deactivated" });
+    }
+
+    if (action === "reactivate") {
+      const { userId, orgId } = body;
+      await admin.from("org_members").update({ is_active: true }).eq("user_id", userId).eq("org_id", orgId);
+      return NextResponse.json({ success: true, message: "User reactivated" });
+    }
+
+    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message || "Unknown error" }, { status: 500 });
   }
 }
