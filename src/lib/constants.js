@@ -62,13 +62,8 @@ export const THEMES = {
     accent: COLORS.blue,
     accentGlow: "rgba(47,128,237,.15)",
     shadow: "0 16px 48px rgba(0,0,0,.4)",
-    // Gradient orbs
-    gradientOrbs: [
-      { color: "rgba(47,128,237,.12)", size: 400, top: "10%", left: "5%", blur: 80 },
-      { color: "rgba(15,123,108,.08)", size: 300, top: "55%", right: "10%", blur: 60 },
-      { color: "rgba(105,64,165,.08)", size: 350, top: "0%", right: "25%", blur: 70 },
-    ],
-    gradient: "radial-gradient(ellipse 600px 400px at 20% 80%, rgba(47,128,237,.12) 0%, transparent 70%), radial-gradient(ellipse 500px 350px at 80% 20%, rgba(15,123,108,.08) 0%, transparent 70%), radial-gradient(ellipse 450px 500px at 50% 50%, rgba(105,64,165,.06) 0%, transparent 70%)",
+    gradientOrbs: [],
+    gradient: "none",
   },
   light: {
     id: "light",
