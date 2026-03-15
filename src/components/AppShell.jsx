@@ -447,7 +447,7 @@ export default function AppShell() {
         <div style={{ width: 400, background: "rgba(15,15,22,.75)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 16, padding: "32px 36px", boxShadow: "0 24px 80px rgba(0,0,0,.5)" }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
             <div style={{ width: 52, height: 52, background: "#2F80ED", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 22, color: "#050507", margin: "0 auto 12px" }}>J</div>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Jackalope</h1>
+            <h1 style={{ margin: 0, fontFamily: "'Libre Baskerville', Georgia, serif", fontSize: 36, fontWeight: 400, letterSpacing: "0.01em" }}>Jackalope</h1>
             <p style={{ margin: "4px 0 0", fontSize: 13, color: "#5E5E72" }}>Architectural Project Management</p>
           </div>
           <div style={{ display: "flex", gap: 0, marginBottom: 20, borderBottom: "1px solid #252535" }}>
@@ -538,7 +538,7 @@ export default function AppShell() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 34, height: 34, background: "#2F80ED", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, color: "#050507", letterSpacing: "-0.04em" }}>J</div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: "-.01em" }}>Jackalope</div>
+              <div style={{ fontFamily: "'Libre Baskerville', Georgia, serif", fontSize: 16, fontWeight: 400, letterSpacing: "0.01em" }}>Jackalope</div>
               <div style={{ fontSize: 10, color: "#5E5E72", fontFamily: M }}>TEXARCHWORKS</div>
             </div>
           </div>
