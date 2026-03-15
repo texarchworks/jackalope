@@ -48,12 +48,12 @@ export default function usePermissions({ projectId, organizationId } = {}) {
       if (resolvedOrgId) {
         const { data: om } = await supabase
           .from("org_members")
-          .select("role")
+          .select("org_role")
           .eq("org_id", resolvedOrgId)
           .eq("user_id", user.id)
-          .eq("status", "active")
+          .neq("is_active", false)
           .single();
-        if (!cancelled) setOrgRole(om?.role || null);
+        if (!cancelled) setOrgRole(om?.org_role || null);
       }
 
       if (!cancelled) setLoading(false);
