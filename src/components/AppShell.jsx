@@ -366,6 +366,7 @@ export default function AppShell() {
       .insert({
         name: proj.name,
         subtitle: proj.subtitle || "",
+        location: proj.location || "",
         icon: proj.icon || proj.name.substring(0, 2).toUpperCase(),
         color: proj.color || "#2F80ED",
         loc_label: proj.locLabel || "Zone",
@@ -396,6 +397,7 @@ export default function AppShell() {
     const dbUpdates = {};
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.subtitle !== undefined) dbUpdates.subtitle = updates.subtitle;
+    if (updates.location !== undefined) dbUpdates.location = updates.location;
     if (updates.icon !== undefined) dbUpdates.icon = updates.icon;
     if (updates.color !== undefined) dbUpdates.color = updates.color;
     if (updates.locLabel !== undefined) dbUpdates.loc_label = updates.locLabel;
