@@ -18,7 +18,7 @@ const Stat = ({ label, value, color, icon }) => (
 
 export default function ProjectsHome({ projects, goProj, onNew }) {
   const [showNew, setShowNew] = useState(false);
-  const [form, setForm] = useState({ name: "", subtitle: "", icon: "", color: TEAM_COLORS[0], locLabel: "Zone", subLabel: "Building" });
+  const [form, setForm] = useState({ name: "", subtitle: "", location: "", icon: "", color: TEAM_COLORS[0], locLabel: "Zone", subLabel: "Building" });
 
   const tot = projects.reduce((a, p) => a + p.tasks.length, 0);
   const opn = projects.reduce((a, p) => a + p.tasks.filter((t) => t.status === "open").length, 0);
@@ -28,7 +28,7 @@ export default function ProjectsHome({ projects, goProj, onNew }) {
   const handleCreate = async () => {
     if (!form.name.trim()) return;
     await onNew(form);
-    setForm({ name: "", subtitle: "", icon: "", color: TEAM_COLORS[0], locLabel: "Zone", subLabel: "Building" });
+    setForm({ name: "", subtitle: "", location: "", icon: "", color: TEAM_COLORS[0], locLabel: "Zone", subLabel: "Building" });
     setShowNew(false);
   };
 
@@ -59,7 +59,7 @@ export default function ProjectsHome({ projects, goProj, onNew }) {
               <div style={{ padding: "20px 22px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
                   <div style={{ width: 48, height: 48, borderRadius: 12, background: p.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700, color: "white" }}>{p.icon}</div>
-                  <div style={{ flex: 1 }}><div style={{ fontSize: 17, fontWeight: 700 }}>{p.name}</div><div style={{ fontSize: 12, color: "var(--t-muted, #888)", marginTop: 2 }}>{p.subtitle}</div></div>
+                  <div style={{ flex: 1 }}><div style={{ fontSize: 17, fontWeight: 700 }}>{p.name}</div><div style={{ fontSize: 12, color: "var(--t-muted, #888)", marginTop: 2 }}>{p.subtitle}{p.location ? <span style={{ marginLeft: 6, fontSize: 11, color: "var(--t-dim, #555)" }}>📍 {p.location}</span> : null}</div></div>
                 </div>
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 11, color: "var(--t-muted, #888)" }}>Progress</span><span style={{ fontSize: 11, fontWeight: 600, color: p.color }}>{pct}%</span></div>
@@ -105,6 +105,7 @@ export default function ProjectsHome({ projects, goProj, onNew }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div><label style={lb}>Project Name</label><input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Horizon Park" style={{ ...ins, width: "100%", fontSize: 16, fontWeight: 600 }} /></div>
               <div><label style={lb}>Subtitle</label><input value={form.subtitle} onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))} placeholder="28-Acre Theme Park · 7 Zones" style={{ ...ins, width: "100%" }} /></div>
+              <div><label style={lb}>Location</label><input value={form.location} onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))} placeholder="San Antonio, TX" style={{ ...ins, width: "100%" }} /></div>
               <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 1fr", gap: 12 }}>
                 <div><label style={lb}>Icon</label><input value={form.icon} onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value.substring(0, 2) }))} placeholder="HP" maxLength={2} style={{ ...ins, width: "100%", textAlign: "center", fontSize: 16, fontWeight: 700 }} /></div>
                 <div><label style={lb}>Location Label</label><input value={form.locLabel} onChange={(e) => setForm((f) => ({ ...f, locLabel: e.target.value }))} placeholder="Zone, Floor…" style={{ ...ins, width: "100%" }} /></div>

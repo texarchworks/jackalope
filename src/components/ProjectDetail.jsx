@@ -79,7 +79,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
   const [showSettings, setShowSettings] = useState(false);
   const [sTab, setSTab] = useState("team");
   const [showEditProject, setShowEditProject] = useState(false);
-  const [editProjData, setEditProjData] = useState({ name: p.name, subtitle: p.subtitle || "", icon: p.icon, color: p.color, locLabel: p.locLabel, subLabel: p.subLabel });
+  const [editProjData, setEditProjData] = useState({ name: p.name, subtitle: p.subtitle || "", location: p.location || "", icon: p.icon, color: p.color, locLabel: p.locLabel, subLabel: p.subLabel });
   const [showDeleteProject, setShowDeleteProject] = useState(false);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [invEmail, setInvEmail] = useState("");
@@ -855,6 +855,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div><label style={lb}>Project Name</label><input value={editProjData.name} onChange={(e)=>setEditProjData({...editProjData,name:e.target.value})} style={{...ins,width:"100%"}} /></div>
         <div><label style={lb}>Subtitle / Description</label><input value={editProjData.subtitle} onChange={(e)=>setEditProjData({...editProjData,subtitle:e.target.value})} style={{...ins,width:"100%"}} /></div>
+        <div><label style={lb}>Location</label><input value={editProjData.location} onChange={(e)=>setEditProjData({...editProjData,location:e.target.value})} placeholder="San Antonio, TX" style={{...ins,width:"100%"}} /></div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:12}}>
           <div><label style={lb}>Icon</label><input value={editProjData.icon} onChange={(e)=>setEditProjData({...editProjData,icon:e.target.value})} maxLength={3} style={{...ins,width:"100%",textAlign:"center"}} /></div>
           <div><label style={lb}>Color</label><input type="color" value={editProjData.color} onChange={(e)=>setEditProjData({...editProjData,color:e.target.value})} style={{...ins,width:"100%",height:42,padding:4,cursor:"pointer"}} /></div>
