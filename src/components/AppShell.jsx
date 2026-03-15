@@ -7,6 +7,8 @@ import MyWork from "@/components/MyWork";
 import ProjectsHome from "@/components/ProjectsHome";
 import ProjectDetail from "@/components/ProjectDetail";
 import OrgTeam from "@/components/OrgTeam";
+import usePermissions from "@/hooks/usePermissions";
+import { ACTIONS, isAdminOnly } from "@/lib/permissions";
 
 const M = "'IBM Plex Mono', monospace";
 const F = "'Inter', -apple-system, sans-serif";
@@ -19,6 +21,7 @@ export default function AppShell() {
   const [projects, setProjects] = useState([]);
   const [org, setOrg] = useState(null);
   const [orgMembers, setOrgMembers] = useState([]);
+  const { canDo: canDoOrg } = usePermissions({ organizationId: org?.id });
   const [page, setPage] = useState("mywork");
   const [curProjId, setCurProjId] = useState(null);
   const [loginEmail, setLoginEmail] = useState("");
@@ -542,7 +545,7 @@ export default function AppShell() {
         </div>
 
         <nav style={{ flex: 1, padding: "12px 10px", overflowY: "auto" }}>
-          {[{ id: "mywork", label: "My Work", icon: "◐" }, { id: "projects", label: "Projects", icon: "▣" }, { id: "team", label: "Team", icon: "◉" }].map((n) => (
+          {[{ id: "mywork", label: "My Work", icon: "◐" }, { id: "projects", label: "Projects", icon: "▣" }, ...(canDoOrg(ACTIONS.VIEW_ORG_TEAM) ? [{ id: "team", label: "Team", icon: "◉" }] : [])].map((n) => (
             <button key={n.id} onClick={() => { setPage(n.id); setCurProjId(null); }}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: page === n.id ? 600 : 400, background: page === n.id ? T.text : "transparent", color: page === n.id ? T.bg : T.textMuted, marginBottom: 4, textAlign: "left", fontFamily: F }}>
               <span style={{ fontSize: 14 }}>{n.icon}</span>{n.label}
