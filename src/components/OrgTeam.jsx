@@ -2,6 +2,9 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { makeAvatar as av } from "@/lib/helpers";
+import usePermissions from "@/hooks/usePermissions";
+import { ACTIONS } from "@/lib/permissions";
+import PermissionGate from "@/components/PermissionGate";
 
 const M = "'IBM Plex Mono', monospace";
 const F = "'Inter', -apple-system, sans-serif";
@@ -20,6 +23,7 @@ export default function OrgTeam({ org, orgMembers, projects, userId, onReload })
   const currentMember = orgMembers.find((m) => m.user_id === userId);
   const myOrgRole = currentMember?.org_role || "member";
   const isOrgAdmin = myOrgRole === "owner" || myOrgRole === "admin";
+  const { canDo } = usePermissions({ organizationId: org?.id });
 
   const active = orgMembers.filter((m) => m.is_active !== false);
   const inactive = orgMembers.filter((m) => m.is_active === false);
@@ -70,7 +74,7 @@ export default function OrgTeam({ org, orgMembers, projects, userId, onReload })
       </div>
 
       {/* Invite - org admins only */}
-      {isOrgAdmin && <div style={{ background: "var(--t-card, #202020)", border: "1px solid #252535", borderRadius: 10, padding: "16px 20px", marginBottom: 20 }}>
+      {canDo(ACTIONS.INVITE_MEMBER) && <div style={{ background: "var(--t-card, #202020)", border: "1px solid #252535", borderRadius: 10, padding: "16px 20px", marginBottom: 20 }}>
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Invite Internal Member</div>
         <p style={{ fontSize: 11, color: "var(--t-muted, #888)", margin: "0 0 10px" }}>Only @texarchworks.com emails. For external collaborators (consultants, contractors), use Project Settings.</p>
         <div style={{ display: "flex", gap: 8 }}>
@@ -117,19 +121,19 @@ export default function OrgTeam({ org, orgMembers, projects, userId, onReload })
                 </div>}
               </div>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                {isOrgAdmin && m.user_id !== userId && <select value={m.org_role} onChange={(e) => updateOrgRole(m.id, e.target.value)} style={{ ...sl, padding: "4px 8px", fontSize: 11, width: 90 }}>
+                {canDo(ACTIONS.CHANGE_ROLE) && m.user_id !== userId && <select value={m.org_role} onChange={(e) => updateOrgRole(m.id, e.target.value)} style={{ ...sl, padding: "4px 8px", fontSize: 11, width: 90 }}>
                   {myOrgRole === "owner" && <option value="owner">Owner</option>}<option value="admin">Admin</option><option value="member">Member</option>
                 </select>}
-                {!isOrgAdmin && <span style={{ fontSize: 10, color: "var(--t-muted, #888)", fontFamily: M }}>{m.org_role}</span>}
-                {isOrgAdmin && !m.joined_at && <button disabled={actionLoading === m.user_id} onClick={() => doAction("resend", m.user_id)}
+                {!canDo(ACTIONS.CHANGE_ROLE) && <span style={{ fontSize: 10, color: "var(--t-muted, #888)", fontFamily: M }}>{m.org_role}</span>}
+                {canDo(ACTIONS.INVITE_MEMBER) && !m.joined_at && <button disabled={actionLoading === m.user_id} onClick={() => doAction("resend", m.user_id)}
                   style={{ ...bs, background: "#2F80ED", color: "white", padding: "4px 10px", fontSize: 11 }}>
                   {actionLoading === m.user_id ? "…" : "Resend"}
                 </button>}
-                {isOrgAdmin && m.user_id !== userId && (isInactive
+                {canDo(ACTIONS.REMOVE_MEMBER) && m.user_id !== userId && (isInactive
                   ? <button onClick={() => doAction("reactivate", m.user_id)} style={{ ...bs, background: "#0F7B6C", color: "white", padding: "4px 10px", fontSize: 11 }}>Reactivate</button>
                   : <button onClick={() => doAction("deactivate", m.user_id)} style={{ ...bs, background: "#CA8A04", color: "white", padding: "4px 10px", fontSize: 11 }}>Deactivate</button>
                 )}
-                {isOrgAdmin && m.user_id !== userId && <button onClick={() => { if (confirm(`Remove ${m.profile?.name || "this user"} permanently?`)) doAction("delete", m.user_id); }}
+                {canDo(ACTIONS.REMOVE_MEMBER) && m.user_id !== userId && <button onClick={() => { if (confirm(`Remove ${m.profile?.name || "this user"} permanently?`)) doAction("delete", m.user_id); }}
                   style={{ ...bs, background: "var(--t-border, #333)", color: "#E03E3E", padding: "4px 10px", fontSize: 11 }}>Delete</button>}
               </div>
             </div>

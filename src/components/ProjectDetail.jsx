@@ -4,6 +4,9 @@ import { supabase } from "@/lib/supabase";
 import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS } from "@/lib/constants";
 import { makeAvatar as av } from "@/lib/helpers";
 import TaskCanvas from "@/components/TaskCanvas";
+import usePermissions from "@/hooks/usePermissions";
+import { ACTIONS } from "@/lib/permissions";
+import PermissionGate from "@/components/PermissionGate";
 
 const M = "'IBM Plex Mono', monospace";
 const F = "'Inter', -apple-system, sans-serif";
@@ -56,6 +59,7 @@ function TaskForm({ task, onChange, onSubmit, btnLabel, team, locs, subs, cats, 
 }
 
 export default function ProjectDetail({ project: p, userId, isPM, permissions = {}, onCreateTask, onUpdateTask, onDeleteTask, onReload, onEditProject, onDeleteProject, theme: T = {} }) {
+  const { role: permRole, canDo } = usePermissions({ projectId: p.id });
   const allSubs = useMemo(() => Object.values(p.subs).flat(), [p.subs]);
   const tm = p.team || [];
   const [vw, setVw] = useState("board");
@@ -279,10 +283,10 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         <div><h2 style={{ margin:0,fontSize:22,fontWeight:700 }}>{p.name}</h2><p style={{ margin:0,fontSize:12,color:T.textMuted }}>{p.subtitle}</p></div>
       </div>
       <div style={{ display:"flex", gap:8 }}>
-        <button onClick={()=>{setEditProjData({name:p.name,subtitle:p.subtitle||"",icon:p.icon,color:p.color,locLabel:p.locLabel,subLabel:p.subLabel});setShowEditProject(true);}} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✎ Edit</button>
+        {canDo(ACTIONS.EDIT_PROJECT)&&<button onClick={()=>{setEditProjData({name:p.name,subtitle:p.subtitle||"",location:p.location||"",icon:p.icon,color:p.color,locLabel:p.locLabel,subLabel:p.subLabel});setShowEditProject(true);}} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✎ Edit</button>}
         <button onClick={()=>{setShowSettings(true);setSTab("team");loadAllUsers();}} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>⚙ Settings</button>
-        {permissions.canCreate&&<button onClick={()=>setShowM(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✦ Scrub Notes</button>}
-        {permissions.canCreate&&<button onClick={()=>setShowC(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>+ New Task</button>}
+        {canDo(ACTIONS.EDIT_MEETING_NOTES)&&<button onClick={()=>setShowM(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✦ Scrub Notes</button>}
+        {canDo(ACTIONS.CREATE_TASK)&&<button onClick={()=>setShowC(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>+ New Task</button>}
       </div>
     </div>
     <div style={{background:T.bgInput,border:`1px solid ${T.border}`,borderRadius:8,padding:"10px 14px",marginBottom:10,position:"relative"}}>
@@ -339,9 +343,9 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
                 <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary} title={sub.name}>{sub.id}</Tg>}<Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg>{task.source==="meeting"&&<Tg bg="#FAF5FF" fg="#9333EA">✦</Tg>}<CatTags cat={task.category}/></div>
                 <div style={{display:"flex",gap:3}}>
-                  {permissions.canCreate&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}
-                  <button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Edit">✎</button>
-                  {(permissions.isAdmin||isPM)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}
+                  {canDo(ACTIONS.CREATE_TASK)&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}
+                  <button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,display:canDo(ACTIONS.EDIT_TASK,{isOwner:task.assignee===userId})?"inline":"none"}} title="Edit">✎</button>
+                  {canDo(ACTIONS.DELETE_TASK)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}
                 </div>
               </div>
               <div style={{fontSize:12,fontWeight:500,lineHeight:1.3,marginBottom:6}}>{task.title}</div>
@@ -368,9 +372,9 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
                 <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary} title={sub.name}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg>{task.source==="meeting"&&<Tg bg="#FAF5FF" fg="#9333EA">✦</Tg>}<CatTags cat={task.category}/></div>
                 <div style={{display:"flex",gap:3}}>
-                  {permissions.canCreate&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}
-                  <button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Edit">✎</button>
-                  {(permissions.isAdmin||isPM)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}
+                  {canDo(ACTIONS.CREATE_TASK)&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}
+                  <button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,display:canDo(ACTIONS.EDIT_TASK,{isOwner:task.assignee===userId})?"inline":"none"}} title="Edit">✎</button>
+                  {canDo(ACTIONS.DELETE_TASK)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}
                 </div>
               </div>
               <div style={{fontSize:12,fontWeight:500,lineHeight:1.3,marginBottom:6,textDecoration:task.status==="resolved"?"line-through":"none"}}>{task.title}</div>
@@ -398,7 +402,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
               return(<div key={task.id} onClick={()=>setExpandCard(task.id)} style={{background:T.bgElevated,border:`1px solid ${T.border}`,borderLeft:`3px solid ${pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                   <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
-                  <div style={{display:"flex",gap:3}}>{permissions.canCreate&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}<button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Edit">✎</button>{(permissions.isAdmin||isPM)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}</div>
+                  <div style={{display:"flex",gap:3}}>{canDo(ACTIONS.CREATE_TASK)&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}<button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,display:canDo(ACTIONS.EDIT_TASK,{isOwner:task.assignee===userId})?"inline":"none"}} title="Edit">✎</button>{canDo(ACTIONS.DELETE_TASK)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}</div>
                 </div>
                 <div style={{fontSize:12,fontWeight:500,lineHeight:1.3,marginBottom:4}}>{task.title}</div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>{task.dueDate&&<span style={{fontSize:9,color:T.textMuted,fontFamily:M}}>{task.dueDate}</span>}{children.length>0&&<span style={{fontSize:9,color:T.textMuted,fontFamily:M}}>{children.filter((c)=>c.status==="resolved").length}/{children.length}</span>}</div>
@@ -419,7 +423,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
             return(<div key={task.id} onClick={()=>setExpandCard(task.id)} style={{background:T.bgElevated,border:`1px solid ${T.border}`,borderLeft:`3px solid ${pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                 <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
-                <div style={{display:"flex",gap:3}}>{permissions.canCreate&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}<button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Edit">✎</button>{(permissions.isAdmin||isPM)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}</div>
+                <div style={{display:"flex",gap:3}}>{canDo(ACTIONS.CREATE_TASK)&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}<button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,display:canDo(ACTIONS.EDIT_TASK,{isOwner:task.assignee===userId})?"inline":"none"}} title="Edit">✎</button>{canDo(ACTIONS.DELETE_TASK)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}</div>
               </div>
               <div style={{fontSize:12,fontWeight:500,lineHeight:1.3,marginBottom:4}}>{task.title}</div>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -444,7 +448,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
               return(<div key={task.id} onClick={()=>setExpandCard(task.id)} style={{background:T.bgElevated,border:`1px solid ${T.border}`,borderLeft:`3px solid ${pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                   <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
-                  <div style={{display:"flex",gap:3}}>{permissions.canCreate&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}<button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Edit">✎</button>{(permissions.isAdmin||isPM)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}</div>
+                  <div style={{display:"flex",gap:3}}>{canDo(ACTIONS.CREATE_TASK)&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}<button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,display:canDo(ACTIONS.EDIT_TASK,{isOwner:task.assignee===userId})?"inline":"none"}} title="Edit">✎</button>{canDo(ACTIONS.DELETE_TASK)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}</div>
                 </div>
                 <div style={{fontSize:12,fontWeight:500,lineHeight:1.3,marginBottom:4}}>{task.title}</div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -494,9 +498,9 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
           <td style={{padding:"8px 12px",fontSize:11,color:T.textSecondary,fontFamily:M}}>{task.dueDate||"—"}</td>
           <td style={{padding:"8px 8px"}} onClick={(e)=>e.stopPropagation()}>
             <div style={{display:"flex",gap:4,alignItems:"center"}}>
-              {permissions.canCreate&&<button onClick={()=>startAddSub(task.id)} style={{background:"none",border:`1px solid ${T.border}`,borderRadius:4,cursor:"pointer",color:T.textMuted,fontSize:10,padding:"2px 6px",fontFamily:F}} title="Add sub-task">+ sub</button>}
+              {canDo(ACTIONS.CREATE_TASK)&&<button onClick={()=>startAddSub(task.id)} style={{background:"none",border:`1px solid ${T.border}`,borderRadius:4,cursor:"pointer",color:T.textMuted,fontSize:10,padding:"2px 6px",fontFamily:F}} title="Add sub-task">+ sub</button>}
               <button onClick={()=>opnE(task)} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:11}} title="Edit">✎</button>
-              {(permissions.isAdmin||isPM)&&<button onClick={()=>confirmDel(task)} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:13,padding:"0 2px",opacity:0.6}} title="Delete task">🗑</button>}
+              {canDo(ACTIONS.DELETE_TASK)&&<button onClick={()=>confirmDel(task)} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:13,padding:"0 2px",opacity:0.6}} title="Delete task">🗑</button>}
             </div>
           </td>
         </tr>
@@ -526,13 +530,13 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
           <td style={{padding:"6px 8px"}} onClick={(e)=>e.stopPropagation()}>
             <div style={{display:"flex",gap:4,alignItems:"center"}}>
               <button onClick={()=>opnE(ch)} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Edit">✎</button>
-              {(permissions.isAdmin||isPM)&&<button onClick={()=>confirmDel(ch)} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:12,padding:"0 2px",opacity:0.6}} title="Delete sub-task">🗑</button>}
+              {canDo(ACTIONS.DELETE_TASK)&&<button onClick={()=>confirmDel(ch)} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:12,padding:"0 2px",opacity:0.6}} title="Delete sub-task">🗑</button>}
             </div>
           </td>
         </tr>);})}
         </>);})}
         {/* Inline new task row */}
-        {permissions.canCreate&&inlineNew&&<tr style={{borderBottom:`1px solid ${T.borderSubtle}`,background:T.bgElevated}}>
+        {canDo(ACTIONS.CREATE_TASK)&&inlineNew&&<tr style={{borderBottom:`1px solid ${T.borderSubtle}`,background:T.bgElevated}}>
           <td style={{padding:"6px 8px"}}><select value={inlineTask.loc} onChange={(e)=>setInlineTask({...inlineTask,loc:e.target.value,sub:""})} style={{background:"transparent",color:T.text,border:`1px solid ${T.border}`,borderRadius:4,padding:"3px 6px",fontSize:10,cursor:"pointer",fontFamily:F,outline:"none",maxWidth:80}}>{p.locs.map((l)=><option key={l.id} value={l.id}>{l.id}</option>)}</select></td>
           <td style={{padding:"6px 8px"}}><select value={inlineTask.sub} onChange={(e)=>setInlineTask({...inlineTask,sub:e.target.value})} style={{background:"transparent",color:T.text,border:`1px solid ${T.border}`,borderRadius:4,padding:"3px 6px",fontSize:10,cursor:"pointer",fontFamily:F,outline:"none",maxWidth:80}}><option value="">—</option>{(p.subs[inlineTask.loc]||[]).map((s)=><option key={s.id} value={s.id}>{s.id}</option>)}</select></td>
           <td style={{padding:"6px 8px"}}><input value={inlineTask.title} onChange={(e)=>setInlineTask({...inlineTask,title:e.target.value})} onKeyDown={(e)=>{if(e.key==="Enter")submitInline();if(e.key==="Escape"){setInlineNew(false);}}} placeholder="Task title…" autoFocus style={{background:"transparent",border:"none",outline:"none",color:T.text,fontSize:12,fontWeight:500,width:"100%",fontFamily:F,padding:0}} /></td>
@@ -548,7 +552,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         </tr>}
       </tbody></table>
       {/* Notion-style + New button */}
-      {permissions.canCreate&&!inlineNew&&<div onClick={()=>setInlineNew(true)} style={{padding:"10px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:6,color:T.textMuted,fontSize:13,borderTop:`1px solid ${T.border}`,transition:"all .12s"}} onMouseEnter={(e)=>{e.currentTarget.style.background=T.bgHover;e.currentTarget.style.color=T.text;}} onMouseLeave={(e)=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.textMuted;}}>
+      {canDo(ACTIONS.CREATE_TASK)&&!inlineNew&&<div onClick={()=>setInlineNew(true)} style={{padding:"10px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:6,color:T.textMuted,fontSize:13,borderTop:`1px solid ${T.border}`,transition:"all .12s"}} onMouseEnter={(e)=>{e.currentTarget.style.background=T.bgHover;e.currentTarget.style.color=T.text;}} onMouseLeave={(e)=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.textMuted;}}>
         <span style={{width:18,height:18,borderRadius:4,border:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>+</span>
         New
       </div>}
@@ -601,7 +605,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
               {isPM?<select value={mRole} onChange={async(e)=>{const {error}=await supabase.from("project_members").update({role:e.target.value}).eq("project_id",p.id).eq("user_id",m.id);if(error)alert("Error: "+error.message);else onReload();}} style={{...sl,padding:"4px 8px",fontSize:11,width:90}}>
                 <option value="admin">Admin</option><option value="pm">PM</option><option value="member">Member</option><option value="viewer">Viewer</option>
               </select>:<span style={{fontSize:10,color:T.textMuted,background:T.borderSubtle,padding:"3px 8px",borderRadius:4}}>{roleCfg.label}</span>}
-              {isPM&&<button onClick={()=>removeMember(m.id)} style={{...bs,background:T.border,color:"#E03E3E",padding:"4px 10px",fontSize:11}}>Remove</button>}
+              {canDo(ACTIONS.REMOVE_MEMBER)&&<button onClick={()=>removeMember(m.id)} style={{...bs,background:T.border,color:"#E03E3E",padding:"4px 10px",fontSize:11}}>Remove</button>}
             </div>);})}
           </div>
           {external.length>0&&<>
@@ -617,7 +621,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
                     {isPM?<select value={mRole} onChange={async(e)=>{await supabase.from("project_members").update({role:e.target.value}).eq("project_id",p.id).eq("user_id",m.id);onReload();}} style={{...sl,padding:"4px 8px",fontSize:11,width:90}}>
                       <option value="pm">PM</option><option value="member">Member</option><option value="viewer">Viewer</option>
                     </select>:<span style={{fontSize:10,color:T.textMuted,background:T.borderSubtle,padding:"3px 8px",borderRadius:4}}>{roleCfg.label}</span>}
-                    {isPM&&<button onClick={()=>removeMember(m.id)} style={{...bs,background:T.border,color:"#E03E3E",padding:"3px 8px",fontSize:10}}>Remove</button>}
+                    {canDo(ACTIONS.REMOVE_MEMBER)&&<button onClick={()=>removeMember(m.id)} style={{...bs,background:T.border,color:"#E03E3E",padding:"3px 8px",fontSize:10}}>Remove</button>}
                   </div>);})}
                 </div>
               </div>);})}
@@ -689,7 +693,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
                 <span style={{fontSize:11,color:T.textMuted}}>{locSubs.length} {p.subLabel.toLowerCase()}{locSubs.length!==1?"s":""}</span>
                 <button onClick={()=>setEditLoc({code:loc.id,name:loc.name,color:loc.color,desc:loc.desc||"",_origCode:loc.id})} style={{...bs,background:T.borderSubtle,color:T.textSecondary,padding:"4px 10px",fontSize:11}}>Edit</button>
                 <button onClick={()=>{setAddSubFor(addSubFor===loc.id?null:loc.id);setNewSubCode("");setNewSubName("");}} style={{...bs,background:T.borderSubtle,color:T.textSecondary,padding:"4px 10px",fontSize:11}}>+ {p.subLabel}</button>
-                <button onClick={()=>removeLocation(loc.id)} style={{...bs,background:T.border,color:"#E03E3E",padding:"4px 10px",fontSize:11}}>Remove</button>
+                {canDo(ACTIONS.MANAGE_LOCATIONS)&&<button onClick={()=>removeLocation(loc.id)} style={{...bs,background:T.border,color:"#E03E3E",padding:"4px 10px",fontSize:11}}>Remove</button>}
               </div>
               {locSubs.length>0&&<div style={{marginLeft:22,display:"flex",flexDirection:"column",gap:4}}>
                 {locSubs.map((s)=>{const isEditingSub=editSub?._origCode===s.id;const subTaskCount=p.tasks.filter((t)=>t.sub===s.id).length;return isEditingSub?(
@@ -705,7 +709,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
                     <span style={{fontSize:12,color:T.text,flex:1}}>{s.name}</span>
                     <span style={{fontSize:10,color:T.textDim,fontFamily:M}}>{subTaskCount} task{subTaskCount!==1?"s":""}</span>
                     <button onClick={()=>setEditSub({code:s.id,name:s.name,_origCode:s.id,_locCode:loc.id})} style={{...bs,background:T.borderSubtle,color:T.textMuted,padding:"3px 8px",fontSize:10}}>Edit</button>
-                    <button onClick={()=>removeSubLocation(s.id)} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,padding:"0 2px"}}>✕</button>
+                    {canDo(ACTIONS.MANAGE_LOCATIONS)&&<button onClick={()=>removeSubLocation(s.id)} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,padding:"0 2px"}}>✕</button>}
                   </div>
                 );})}
               </div>}
@@ -734,7 +738,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
           {p.cats.map((cat)=>(<div key={cat} style={{display:"flex",alignItems:"center",gap:6,background:T.bgElevated,border:`1px solid ${T.border}`,borderRadius:6,padding:"6px 10px",fontSize:12}}>
             <span style={{color:T.text}}>{cat}</span>
-            <button onClick={()=>removeCategory(cat)} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,padding:0}}>✕</button>
+            {canDo(ACTIONS.MANAGE_CATEGORIES)&&<button onClick={()=>removeCategory(cat)} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,padding:0}}>✕</button>}
           </div>))}
         </div>
         <div style={{display:"flex",gap:8}}>
@@ -804,14 +808,14 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
           </div>
           <div style={{display:"flex",gap:8}}>
             <button onClick={()=>{setExpandCard(null);opnE(task);}} style={{...bs,background:T.text,color:T.bg,fontSize:12}}>✎ Edit Task</button>
-            {permissions.canCreate&&<button onClick={()=>{setExpandCard(null);startAddSub(task.id);}} style={{...bs,background:"#0F7B6C",color:"white",fontSize:12}}>+ Add Sub-Task</button>}
+            {canDo(ACTIONS.CREATE_TASK)&&<button onClick={()=>{setExpandCard(null);startAddSub(task.id);}} style={{...bs,background:"#0F7B6C",color:"white",fontSize:12}}>+ Add Sub-Task</button>}
           </div>
         </div>
         {/* Right: sub-tasks */}
         <div style={{width:340,flexShrink:0}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
             <div style={{fontSize:13,fontWeight:600}}>Sub-Tasks{progress&&<span style={{marginLeft:6,fontSize:11,color:T.textMuted,fontFamily:M}}>{progress.rv}/{progress.tot}</span>}</div>
-            {permissions.canCreate&&<button onClick={()=>{setExpandCard(null);startAddSub(task.id);}} style={{...bs,background:T.bgElevated,color:T.textSecondary,padding:"3px 10px",fontSize:11}}>+ Add</button>}
+            {canDo(ACTIONS.CREATE_TASK)&&<button onClick={()=>{setExpandCard(null);startAddSub(task.id);}} style={{...bs,background:T.bgElevated,color:T.textSecondary,padding:"3px 10px",fontSize:11}}>+ Add</button>}
           </div>
           {progress&&<div style={{height:3,background:T.border,borderRadius:2,marginBottom:10,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.round(progress.rv/progress.tot*100)}%`,background:progress.rv===progress.tot?"#0F7B6C":T.text,borderRadius:2}} /></div>}
           {children.length===0&&<div style={{padding:20,textAlign:"center",color:T.textDim,fontSize:12}}>No sub-tasks yet</div>}
@@ -870,7 +874,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
           <div><label style={lb}>Sub-Location Label</label><input value={editProjData.subLabel} onChange={(e)=>setEditProjData({...editProjData,subLabel:e.target.value})} placeholder="Building" style={{...ins,width:"100%"}} /></div>
         </div>
         <div style={{display:"flex",gap:8,justifyContent:"space-between"}}>
-          {permissions.isAdmin&&<button onClick={()=>{setShowEditProject(false);setShowDeleteProject(true);setDeleteConfirmName("");}} style={{...bs,background:"transparent",color:"#E03E3E",border:"1px solid #E03E3E33",padding:"10px 20px",fontSize:13}}>Delete Project</button>}
+          {canDo(ACTIONS.DELETE_PROJECT)&&<button onClick={()=>{setShowEditProject(false);setShowDeleteProject(true);setDeleteConfirmName("");}} style={{...bs,background:"transparent",color:"#E03E3E",border:"1px solid #E03E3E33",padding:"10px 20px",fontSize:13}}>Delete Project</button>}
           <div style={{display:"flex",gap:8,marginLeft:"auto"}}>
             <button onClick={()=>setShowEditProject(false)} style={{...bs,background:T.bgElevated,color:T.textSecondary,padding:"10px 20px"}}>Cancel</button>
             <button onClick={()=>{onEditProject(editProjData);setShowEditProject(false);}} style={{...bs,background:T.text,color:T.bg,padding:"10px 20px",fontWeight:600}}>Save Changes</button>
