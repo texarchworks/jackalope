@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "db:seed": "bash scripts/seed-dev.sh",
+    "db:reset": "bash scripts/reset-dev.sh"
   },
   "dependencies": {
     "next": "^14.2.0",
