@@ -435,7 +435,7 @@ export default function AppShell() {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "transparent" }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ margin: "0 auto 16px" }}><Logo size={48} /></div>
+          <div style={{ margin: "0 auto 16px" }}><Logo size={96} /></div>
           <div style={{ color: "#5E5E72", fontSize: 14 }}>Loading…</div>
         </div>
       </div>
