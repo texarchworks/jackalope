@@ -334,6 +334,8 @@ export default function AppShell() {
         notes: task.notes || "",
         source: task.source || "manual",
         parent_task_id: task.parent_task_id || null,
+        task_type: task.task_type || "task",
+        phase: task.phase || null,
         created_by: user.id,
       })
       .select()
