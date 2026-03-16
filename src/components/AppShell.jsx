@@ -539,7 +539,7 @@ export default function AppShell() {
       <aside style={{ width: 240, background: T.bgSidebar, backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", flexShrink: 0, height: "100vh", position: "sticky", top: 0, zIndex: 2 }}>
         <div style={{ padding: "20px 18px 16px", borderBottom: `1px solid ${T.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Logo size={22} />
+            <Logo size={96} />
             <div>
               <div style={{ fontFamily: "'Libre Baskerville', Georgia, serif", fontSize: 32, fontWeight: 400, letterSpacing: "0.01em" }}>Jackalope</div>
               <div style={{ fontSize: 10, color: "#5E5E72", fontFamily: M }}>TEXARCHWORKS</div>
