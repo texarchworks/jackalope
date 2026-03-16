@@ -37,14 +37,25 @@ export default function OrgTeam({ org, orgMembers, projects, userId, onReload })
     }
     setInvLoading(true); setInvStatus("");
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
       const res = await fetch("/api/invite", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "invite", email: invEmail.trim(), name: invName.trim(), orgId: org.id }),
+        signal: controller.signal,
       });
-      const data = await res.json();
+      clearTimeout(timeout);
+      let data;
+      try { data = await res.json(); } catch { data = { error: `Server returned ${res.status} — may have timed out` }; }
       if (data.success) { setInvStatus("✓ " + data.message); setInvName(""); setInvEmail(""); onReload(); }
-      else { const e = data.error; setInvStatus("✗ " + (typeof e === "string" ? e : (e?.message || JSON.stringify(e) || "Failed"))); }
-    } catch (err) { setInvStatus("✗ " + (err.message || "Network error — request may have timed out")); }
+      else {
+        const e = data.error || data.message || `Request failed (${res.status})`;
+        setInvStatus("✗ " + (typeof e === "string" ? e : (e?.message || JSON.stringify(e))));
+      }
+    } catch (err) {
+      if (err.name === "AbortError") setInvStatus("✗ Request timed out. Check Supabase email config (SMTP) and Vercel function logs.");
+      else setInvStatus("✗ " + (err.message || "Network error"));
+    }
     setInvLoading(false);
   };
 

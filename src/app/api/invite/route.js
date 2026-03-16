@@ -47,14 +47,17 @@ export async function POST(req) {
       }
 
       // Try to send invite
+      console.log("Invite: calling inviteUserByEmail for", email);
       const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
         data: { name, company: company || "", is_external: isExt },
         redirectTo: process.env.NEXT_PUBLIC_APP_URL || "https://jackalope-henna.vercel.app",
       });
+      console.log("Invite: inviteUserByEmail returned", inviteError ? "ERROR" : "OK");
 
       if (inviteError) {
         // If user already exists in auth but not profiles, handle gracefully
         const msg = errMsg(inviteError);
+        console.error("Invite error:", msg);
         if (msg.toLowerCase().includes("already been registered") || msg.toLowerCase().includes("already exists")) {
           return NextResponse.json({ error: `${email} is already registered. They can log in directly.` }, { status: 409 });
         }
