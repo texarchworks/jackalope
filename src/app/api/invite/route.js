@@ -2,11 +2,16 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 function getAdmin() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Missing Supabase env vars (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY)");
+  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+}
+
+function errMsg(e) {
+  if (!e) return "Unknown error";
+  if (typeof e === "string") return e;
+  return e.message || e.msg || JSON.stringify(e);
 }
 
 export async function POST(req) {
@@ -21,7 +26,7 @@ export async function POST(req) {
 
       const isExt = isExternal || !email.toLowerCase().endsWith("@texarchworks.com");
 
-      // Fast lookup — check profiles table instead of listing all auth users
+      // Fast lookup — check profiles table first
       const { data: existingProfile } = await admin.from("profiles").select("id").eq("email", email.toLowerCase()).maybeSingle();
 
       if (existingProfile) {
@@ -41,11 +46,20 @@ export async function POST(req) {
         return NextResponse.json({ success: true, message: `${name} already registered — added`, existing: true });
       }
 
+      // Try to send invite
       const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
         data: { name, company: company || "", is_external: isExt },
         redirectTo: process.env.NEXT_PUBLIC_APP_URL || "https://jackalope-henna.vercel.app",
       });
-      if (inviteError) return NextResponse.json({ error: inviteError.message }, { status: 500 });
+
+      if (inviteError) {
+        // If user already exists in auth but not profiles, handle gracefully
+        const msg = errMsg(inviteError);
+        if (msg.toLowerCase().includes("already been registered") || msg.toLowerCase().includes("already exists")) {
+          return NextResponse.json({ error: `${email} is already registered. They can log in directly.` }, { status: 409 });
+        }
+        return NextResponse.json({ error: msg }, { status: 500 });
+      }
 
       if (inviteData?.user?.id) {
         await admin.from("profiles").upsert(
@@ -78,7 +92,7 @@ export async function POST(req) {
         data: { name: user.user_metadata?.name || "" },
         redirectTo: process.env.NEXT_PUBLIC_APP_URL || "https://jackalope-henna.vercel.app",
       });
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      if (error) return NextResponse.json({ error: errMsg(error) }, { status: 500 });
       if (inviteData?.user?.id) {
         const { data: oldProfile } = await admin.from("profiles").select("*").eq("id", userId).single();
         await admin.from("profiles").upsert(
@@ -115,6 +129,7 @@ export async function POST(req) {
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (err) {
-    return NextResponse.json({ error: err.message || "Unknown error" }, { status: 500 });
+    console.error("Invite API error:", err);
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
