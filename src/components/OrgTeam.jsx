@@ -43,8 +43,8 @@ export default function OrgTeam({ org, orgMembers, projects, userId, onReload })
       });
       const data = await res.json();
       if (data.success) { setInvStatus("✓ " + data.message); setInvName(""); setInvEmail(""); onReload(); }
-      else { setInvStatus("✗ " + (data.error || "Failed")); }
-    } catch (err) { setInvStatus("✗ " + err.message); }
+      else { const e = data.error; setInvStatus("✗ " + (typeof e === "string" ? e : (e?.message || JSON.stringify(e) || "Failed"))); }
+    } catch (err) { setInvStatus("✗ " + (err.message || "Network error — request may have timed out")); }
     setInvLoading(false);
   };
 
