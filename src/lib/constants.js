@@ -37,6 +37,68 @@ export const DEFAULT_CATEGORIES = [
   "Safety", "Coordination", "RFI", "Submittal", "Punchlist",
 ];
 
+export const TASK_TYPES = {
+  DRAWING_SET: 'drawing_set',
+  MILESTONE: 'milestone',
+  TASK: 'task',
+  CHECKLIST_ITEM: 'checklist_item',
+};
+
+export const TASK_TYPE_CONFIG = {
+  drawing_set: {
+    label: 'Drawing Set',
+    description: 'Full deliverable package',
+    icon: 'FolderOpen',
+    canHaveChildren: true,
+    allowedChildren: ['task', 'checklist_item'],
+    mustBeTopLevel: true,
+    color: 'coral',
+  },
+  milestone: {
+    label: 'Milestone',
+    description: 'Deadline or gate event',
+    icon: 'Flag',
+    canHaveChildren: false,
+    allowedChildren: [],
+    mustBeTopLevel: false,
+    color: 'teal',
+  },
+  task: {
+    label: 'Task',
+    description: 'Unit of work',
+    icon: 'CheckSquare',
+    canHaveChildren: true,
+    allowedChildren: ['checklist_item'],
+    mustBeTopLevel: false,
+    color: 'blue',
+  },
+  checklist_item: {
+    label: 'Checklist Item',
+    description: 'Atomic completable item',
+    icon: 'Circle',
+    canHaveChildren: false,
+    allowedChildren: [],
+    mustBeTopLevel: false,
+    color: 'neutral',
+  },
+};
+
+export const PHASES = {
+  SD: 'SD',
+  DD: 'DD',
+  CD: 'CD',
+  CA: 'CA',
+  PERMIT: 'Permit',
+};
+
+export const PHASE_CONFIG = {
+  SD: { label: 'Schematic Design', short: 'SD', color: '#6940A5' },
+  DD: { label: 'Design Development', short: 'DD', color: '#2F80ED' },
+  CD: { label: 'Construction Documents', short: 'CD', color: '#DFAB01' },
+  CA: { label: 'Construction Admin', short: 'CA', color: '#0F7B6C' },
+  Permit: { label: 'Permitting', short: 'Permit', color: '#E03E3E' },
+};
+
 export const THEMES = {
   dark: {
     id: "dark",
