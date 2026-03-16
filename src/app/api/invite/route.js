@@ -21,20 +21,20 @@ export async function POST(req) {
 
       const isExt = isExternal || !email.toLowerCase().endsWith("@texarchworks.com");
 
-      const { data: { users } } = await admin.auth.admin.listUsers();
-      const existing = users?.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+      // Fast lookup — check profiles table instead of listing all auth users
+      const { data: existingProfile } = await admin.from("profiles").select("id").eq("email", email.toLowerCase()).maybeSingle();
 
-      if (existing) {
-        await admin.from("profiles").update({ company: company || "", is_external: isExt }).eq("id", existing.id);
+      if (existingProfile) {
+        await admin.from("profiles").update({ company: company || "", is_external: isExt }).eq("id", existingProfile.id);
         if (orgId && !isExt) {
           await admin.from("org_members").upsert(
-            { org_id: orgId, user_id: existing.id, org_role: "member", joined_at: new Date().toISOString() },
+            { org_id: orgId, user_id: existingProfile.id, org_role: "member", joined_at: new Date().toISOString() },
             { onConflict: "org_id,user_id" }
           );
         }
         if (projectId) {
           await admin.from("project_members").upsert(
-            { project_id: projectId, user_id: existing.id, role: role || (isExt ? "viewer" : "member") },
+            { project_id: projectId, user_id: existingProfile.id, role: role || (isExt ? "viewer" : "member") },
             { onConflict: "project_id,user_id" }
           );
         }
@@ -43,13 +43,13 @@ export async function POST(req) {
 
       const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
         data: { name, company: company || "", is_external: isExt },
-        redirectTo: "https://jackalope.vercel.app",
+        redirectTo: process.env.NEXT_PUBLIC_APP_URL || "https://jackalope-henna.vercel.app",
       });
       if (inviteError) return NextResponse.json({ error: inviteError.message }, { status: 500 });
 
       if (inviteData?.user?.id) {
         await admin.from("profiles").upsert(
-          { id: inviteData.user.id, name, role: "", color: isExt ? "#6B7280" : "#2563EB", company: company || "", is_external: isExt },
+          { id: inviteData.user.id, name, email: email.toLowerCase(), role: "", color: isExt ? "#6B7280" : "#2563EB", company: company || "", is_external: isExt },
           { onConflict: "id" }
         );
         if (orgId && !isExt) {
@@ -76,13 +76,13 @@ export async function POST(req) {
       await admin.auth.admin.deleteUser(userId);
       const { data: inviteData, error } = await admin.auth.admin.inviteUserByEmail(user.email, {
         data: { name: user.user_metadata?.name || "" },
-        redirectTo: "https://jackalope.vercel.app",
+        redirectTo: process.env.NEXT_PUBLIC_APP_URL || "https://jackalope-henna.vercel.app",
       });
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       if (inviteData?.user?.id) {
         const { data: oldProfile } = await admin.from("profiles").select("*").eq("id", userId).single();
         await admin.from("profiles").upsert(
-          { id: inviteData.user.id, name: oldProfile?.name || user.user_metadata?.name || "", role: oldProfile?.role || "", color: oldProfile?.color || "#2563EB", company: oldProfile?.company || "", is_external: oldProfile?.is_external || false },
+          { id: inviteData.user.id, name: oldProfile?.name || user.user_metadata?.name || "", email: user.email.toLowerCase(), role: oldProfile?.role || "", color: oldProfile?.color || "#2563EB", company: oldProfile?.company || "", is_external: oldProfile?.is_external || false },
           { onConflict: "id" }
         );
         await admin.from("org_members").update({ user_id: inviteData.user.id }).eq("user_id", userId);
