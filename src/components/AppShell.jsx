@@ -448,7 +448,7 @@ export default function AppShell() {
         <div style={{ width: 520, background: "rgba(15,15,22,.75)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 16, padding: "32px 36px", boxShadow: "0 24px 80px rgba(0,0,0,.5)" }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 4 }}>
-              <Logo size={96} />
+              <Logo size={72} />
               <h1 style={{ margin: 0, fontFamily: "'Libre Baskerville', Georgia, serif", fontSize: 72, fontWeight: 400, letterSpacing: "0.01em" }}>Jackalope</h1>
             </div>
             <p style={{ margin: "4px 0 0", fontSize: 13, color: "#5E5E72" }}>Architectural Project Management</p>
@@ -539,7 +539,7 @@ export default function AppShell() {
       <aside style={{ width: 240, background: T.bgSidebar, backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", flexShrink: 0, height: "100vh", position: "sticky", top: 0, zIndex: 2 }}>
         <div style={{ padding: "20px 18px 16px", borderBottom: `1px solid ${T.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Logo size={96} />
+            <Logo size={72} />
             <div>
               <div style={{ fontFamily: "'Libre Baskerville', Georgia, serif", fontSize: 32, fontWeight: 400, letterSpacing: "0.01em" }}>Jackalope</div>
               <div style={{ fontSize: 10, color: "#5E5E72", fontFamily: M }}>TEXARCHWORKS</div>
