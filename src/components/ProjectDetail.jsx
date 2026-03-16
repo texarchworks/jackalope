@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS } from "@/lib/constants";
+import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS, PHASE_CONFIG } from "@/lib/constants";
 import { makeAvatar as av } from "@/lib/helpers";
 import TaskCanvas from "@/components/TaskCanvas";
 import usePermissions from "@/hooks/usePermissions";
@@ -280,7 +280,21 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
       <div style={{ display:"flex", alignItems:"center", gap:14 }}>
         <div style={{ width:44,height:44,borderRadius:12,background:p.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700,color:"white" }}>{p.icon}</div>
-        <div><h2 style={{ margin:0,fontSize:22,fontWeight:700 }}>{p.name}</h2><p style={{ margin:0,fontSize:12,color:T.textMuted }}>{p.subtitle}</p></div>
+        <div>
+          <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+            <h2 style={{ margin:0,fontSize:22,fontWeight:700 }}>{p.name}</h2>
+            {p.current_phase && PHASE_CONFIG[p.current_phase] && (
+              canDo(ACTIONS.EDIT_PROJECT) ? (
+                <select value={p.current_phase} onChange={async(e)=>{await supabase.from("projects").update({current_phase:e.target.value}).eq("id",p.id);onReload();}} style={{...sl,fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:4,background:PHASE_CONFIG[p.current_phase].color+"22",color:PHASE_CONFIG[p.current_phase].color,border:`1px solid ${PHASE_CONFIG[p.current_phase].color}44`,cursor:"pointer",letterSpacing:".04em",textTransform:"uppercase"}}>
+                  {Object.entries(PHASE_CONFIG).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                </select>
+              ) : (
+                <span style={{fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:4,background:PHASE_CONFIG[p.current_phase].color+"22",color:PHASE_CONFIG[p.current_phase].color,border:`1px solid ${PHASE_CONFIG[p.current_phase].color}44`,letterSpacing:".04em",textTransform:"uppercase"}}>{PHASE_CONFIG[p.current_phase].label}</span>
+              )
+            )}
+          </div>
+          <p style={{ margin:0,fontSize:12,color:T.textMuted }}>{p.subtitle}</p>
+        </div>
       </div>
       <div style={{ display:"flex", gap:8 }}>
         {canDo(ACTIONS.EDIT_PROJECT)&&<button onClick={()=>{setEditProjData({name:p.name,subtitle:p.subtitle||"",location:p.location||"",icon:p.icon,color:p.color,locLabel:p.locLabel,subLabel:p.subLabel});setShowEditProject(true);}} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✎ Edit</button>}
