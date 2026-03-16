@@ -1,12 +1,14 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS, PHASE_CONFIG } from "@/lib/constants";
 import { makeAvatar as av } from "@/lib/helpers";
 import TaskCanvas from "@/components/TaskCanvas";
+import DrawingSet from "@/components/DrawingSet";
 import usePermissions from "@/hooks/usePermissions";
 import { ACTIONS } from "@/lib/permissions";
 import PermissionGate from "@/components/PermissionGate";
+import { fetchDrawingSets, createDrawingSet } from "@/lib/drawingSets";
 
 const M = "'IBM Plex Mono', monospace";
 const F = "'Inter', -apple-system, sans-serif";
@@ -86,6 +88,9 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
   const [editProjData, setEditProjData] = useState({ name: p.name, subtitle: p.subtitle || "", location: p.location || "", icon: p.icon, color: p.color, locLabel: p.locLabel, subLabel: p.subLabel });
   const [showDeleteProject, setShowDeleteProject] = useState(false);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [drawingSets, setDrawingSets] = useState([]);
+  const loadDrawingSets = useCallback(async () => { try { const ds = await fetchDrawingSets(p.id); setDrawingSets(ds); } catch (e) { console.error(e); } }, [p.id]);
+  useEffect(() => { loadDrawingSets(); }, [loadDrawingSets]);
   const [invEmail, setInvEmail] = useState("");
   const [invName, setInvName] = useState("");
   const [invCompany, setInvCompany] = useState("");
@@ -300,6 +305,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         {canDo(ACTIONS.EDIT_PROJECT)&&<button onClick={()=>{setEditProjData({name:p.name,subtitle:p.subtitle||"",location:p.location||"",icon:p.icon,color:p.color,locLabel:p.locLabel,subLabel:p.subLabel});setShowEditProject(true);}} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✎ Edit</button>}
         <button onClick={()=>{setShowSettings(true);setSTab("team");loadAllUsers();}} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>⚙ Settings</button>
         {canDo(ACTIONS.EDIT_MEETING_NOTES)&&<button onClick={()=>setShowM(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✦ Scrub Notes</button>}
+        {canDo(ACTIONS.EDIT_PROJECT)&&<button onClick={async()=>{await createDrawingSet({projectId:p.id,name:"Drawing Set",createdBy:userId});loadDrawingSets();}} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✦ New Drawing Set</button>}
         {canDo(ACTIONS.CREATE_TASK)&&<button onClick={()=>setShowC(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>+ New Task</button>}
       </div>
     </div>
@@ -334,6 +340,9 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
 
     {/* SCROLLABLE CONTENT */}
     <div style={{flex:1,overflowY:"auto",overflowX:"hidden",paddingTop:4}}>
+
+    {/* Drawing Sets */}
+    {drawingSets.length>0&&<div style={{marginBottom:16}}>{drawingSets.map((ds)=><DrawingSet key={ds.id} drawingSet={ds} currentPhase={p.current_phase||"SD"} role={permRole} userId={userId} onUpdate={loadDrawingSets} theme={T} />)}</div>}
 
     {vw==="board"&&<>
       <div style={{display:"flex",gap:6,marginBottom:8,alignItems:"center",flexWrap:"wrap"}}>
