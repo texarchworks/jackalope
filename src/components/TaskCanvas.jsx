@@ -13,7 +13,7 @@ const LOC_W = 200, LOC_H = 48, SUB_W = 200, SUB_H = 40, TASK_W = 260, TASK_H = 8
 const DETAIL_W = 300, DETAIL_GAP = 10;
 const priOrder = { critical: 0, high: 1, medium: 2, low: 3 };
 
-function SubTaskModal({ onClose, onSubmit, team, cats, parentTitle }) {
+function SubTaskModal({ onClose, onSubmit, team, cats, parentTitle, T = {} }) {
   const [title, setTitle] = useState(""); const [priority, setPriority] = useState("medium"); const [assignee, setAssignee] = useState(null);
   const [selCats, setSelCats] = useState([]); const [dueDate, setDueDate] = useState(""); const [notes, setNotes] = useState("");
   const toggleCat = (c) => setSelCats((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]);
@@ -34,7 +34,7 @@ function SubTaskModal({ onClose, onSubmit, team, cats, parentTitle }) {
         <button onClick={submit} style={{ ...bs, background: "#0F7B6C", color: "white", width: "100%", padding: "12px", fontWeight: 600 }}>Create Sub-Task</button>
       </div></div></div>);
 }
-function AddSubLocModal({ locCode, locLabel, subLabel, onClose, onSubmit }) {
+function AddSubLocModal({ locCode, locLabel, subLabel, onClose, onSubmit, T = {} }) {
   const [code, setCode] = useState(""); const [name, setName] = useState("");
   return (<div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, backdropFilter: "blur(4px)" }} onClick={(e) => e.target === e.currentTarget && onClose()}>
     <div style={{ background: "var(--t-card, #0F0F16)", borderRadius: 16, border: `1px solid ${T?.border||"#252535"}`, padding: "24px 28px", width: 420, maxWidth: "95vw" }}>
@@ -46,7 +46,7 @@ function AddSubLocModal({ locCode, locLabel, subLabel, onClose, onSubmit }) {
         <button onClick={() => { if (code.trim() && name.trim()) onSubmit({ code, name }); }} style={{ ...bs, background: "#0F7B6C", color: "white", width: "100%", padding: "12px", fontWeight: 600 }}>Add {subLabel}</button>
       </div></div></div>);
 }
-function AddTaskModal({ loc, sub, team, cats, onClose, onSubmit }) {
+function AddTaskModal({ loc, sub, team, cats, onClose, onSubmit, T = {} }) {
   const [title, setTitle] = useState(""); const [priority, setPriority] = useState("medium"); const [assignee, setAssignee] = useState(null);
   const [selCats, setSelCats] = useState([]); const [dueDate, setDueDate] = useState(""); const [notes, setNotes] = useState("");
   const toggleCat = (c) => setSelCats((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]);
@@ -524,9 +524,9 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
           ))}
         </div>
       </div>}
-      {addSubFor && <SubTaskModal onClose={() => setAddSubFor(null)} onSubmit={(sub) => handleAddSubTask(addSubFor, sub)} team={tm} cats={p.cats} parentTitle={p.tasks.find((t) => t.id === addSubFor)?.title || ""} />}
-      {addSubLocFor && <AddSubLocModal locCode={addSubLocFor} locLabel={p.locLabel} subLabel={p.subLabel} onClose={() => setAddSubLocFor(null)} onSubmit={(data) => handleAddSubLoc(addSubLocFor, data)} />}
-      {addTaskFor && <AddTaskModal loc={addTaskFor.loc} sub={addTaskFor.sub} team={tm} cats={p.cats} onClose={() => setAddTaskFor(null)} onSubmit={handleAddTask} />}
+      {addSubFor && <SubTaskModal onClose={() => setAddSubFor(null)} onSubmit={(sub) => handleAddSubTask(addSubFor, sub)} team={tm} cats={p.cats} parentTitle={p.tasks.find((t) => t.id === addSubFor)?.title || ""} T={T} />}
+      {addSubLocFor && <AddSubLocModal locCode={addSubLocFor} locLabel={p.locLabel} subLabel={p.subLabel} onClose={() => setAddSubLocFor(null)} onSubmit={(data) => handleAddSubLoc(addSubLocFor, data)} T={T} />}
+      {addTaskFor && <AddTaskModal loc={addTaskFor.loc} sub={addTaskFor.sub} team={tm} cats={p.cats} onClose={() => setAddTaskFor(null)} onSubmit={handleAddTask} T={T} />}
     </div>
   );
 }
