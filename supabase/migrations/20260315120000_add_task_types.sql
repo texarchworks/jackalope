@@ -73,8 +73,8 @@ BEGIN
       RAISE EXCEPTION 'checklist_item tasks cannot have children';
     END IF;
 
-    IF parent_type = 'task' AND NEW.task_type != 'checklist_item' THEN
-      RAISE EXCEPTION 'task can only contain checklist_item children';
+    IF parent_type = 'task' AND NEW.task_type NOT IN ('task', 'checklist_item') THEN
+      RAISE EXCEPTION 'task can only contain task or checklist_item children';
     END IF;
 
     IF parent_type = 'drawing_set' AND NEW.task_type NOT IN ('task', 'checklist_item') THEN

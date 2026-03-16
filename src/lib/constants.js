@@ -68,7 +68,7 @@ export const TASK_TYPE_CONFIG = {
     description: 'Unit of work',
     icon: 'CheckSquare',
     canHaveChildren: true,
-    allowedChildren: ['checklist_item'],
+    allowedChildren: ['task', 'checklist_item'],
     mustBeTopLevel: false,
     color: 'blue',
   },
