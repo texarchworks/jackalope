@@ -99,6 +99,12 @@ export const PHASE_CONFIG = {
   Permit: { label: 'Permitting', short: 'Permit', color: '#E03E3E' },
 };
 
+export const DRAWING_SET_PHASES = [
+  { key: 'SD', label: 'Schematic Design', color: '#6940A5' },
+  { key: 'DD', label: 'Design Development', color: '#2F80ED' },
+  { key: 'CD', label: 'Construction Documents', color: '#DFAB01' },
+];
+
 export const THEMES = {
   dark: {
     id: "dark",

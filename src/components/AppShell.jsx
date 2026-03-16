@@ -336,6 +336,7 @@ export default function AppShell() {
         parent_task_id: task.parent_task_id || null,
         task_type: task.task_type || "task",
         phase: task.phase || null,
+        drawing_set_item_id: task.drawing_set_item_id || null,
         created_by: user.id,
       })
       .select()
