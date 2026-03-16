@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { DRAWING_SET_PHASES } from "@/lib/constants";
-import { toggleDrawingSetItem, addCustomItem, deleteCustomItem } from "@/lib/drawingSets";
+import { toggleDrawingSetItem, addCustomItem, deleteCustomItem, deleteDrawingSet } from "@/lib/drawingSets";
 import PermissionGate from "@/components/PermissionGate";
 
 const M = "'IBM Plex Mono', monospace";
@@ -49,7 +49,16 @@ export default function DrawingSet({ drawingSet, currentPhase, role, userId, onU
           <span style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{ds.name}</span>
           <span style={{ fontSize: 11, color: T.textMuted, fontFamily: M }}>{ds.completedItems}/{ds.totalItems}</span>
         </div>
-        <span style={{ fontSize: 11, fontWeight: 600, color: "#0F7B6C", fontFamily: M }}>{pct}%</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#0F7B6C", fontFamily: M }}>{pct}%</span>
+          <PermissionGate action="edit_project" role={role}>
+            <button
+              onClick={async () => { if (confirm(`Delete "${ds.name}" and all its items?`)) { try { await deleteDrawingSet(ds.id); onUpdate(); } catch (e) { alert(e.message); } } }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, fontSize: 14, padding: "2px 4px" }}
+              title="Delete drawing set"
+            >✕</button>
+          </PermissionGate>
+        </div>
       </div>
 
       {/* Progress bar */}

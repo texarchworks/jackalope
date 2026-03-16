@@ -82,6 +82,15 @@ export async function addCustomItem({ drawingSetId, name, phase }) {
   return data;
 }
 
+export async function deleteDrawingSet(drawingSetId) {
+  const { error } = await supabase
+    .from('drawing_sets')
+    .delete()
+    .eq('id', drawingSetId);
+
+  if (error) throw new Error(`Failed to delete drawing set: ${error.message}`);
+}
+
 export async function deleteCustomItem(itemId) {
   const { error } = await supabase
     .from('drawing_set_items')
