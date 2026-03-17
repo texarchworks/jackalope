@@ -1,3 +1,7 @@
+export const FEATURES = {
+  DRAWING_SETS: true,
+};
+
 // ROYGBIV semantic colors - same in both themes
 export const COLORS = {
   red: "#E03E3E",
@@ -103,6 +107,60 @@ export const DRAWING_SET_PHASES = [
   { key: 'SD', label: 'Schematic Design', color: '#6940A5' },
   { key: 'DD', label: 'Design Development', color: '#2F80ED' },
   { key: 'CD', label: 'Construction Documents', color: '#DFAB01' },
+];
+
+export const DS_CORAL = "#E8836B";
+
+export const CIVIL_TEMPLATE = [
+  { name: 'Preliminary Site Plan', phase: 'SD' },
+  { name: 'Preliminary Landscape Plan', phase: 'SD' },
+  { name: 'Site / Grading Plan', phase: 'DD' },
+  { name: 'Landscape Plan', phase: 'DD' },
+  { name: 'Cover Sheet', phase: 'CD' },
+  { name: 'Site Plan', phase: 'CD' },
+  { name: 'Demolition Plans', phase: 'CD' },
+  { name: 'Grading / Drainage Plan', phase: 'CD' },
+  { name: 'Utility Plan', phase: 'CD' },
+  { name: 'Landscape Plan', phase: 'CD' },
+  { name: 'Irrigation Plan', phase: 'CD' },
+  { name: 'Civil Details', phase: 'CD' },
+];
+
+export const ARCHITECTURAL_TEMPLATE = [
+  { name: 'Site Analysis', phase: 'SD' },
+  { name: 'Floor Plans', phase: 'SD' },
+  { name: 'Building Sections', phase: 'SD' },
+  { name: 'Exterior Elevations', phase: 'SD' },
+  { name: 'Massing Model / 3D Views', phase: 'SD' },
+  { name: 'Preliminary Specifications', phase: 'SD' },
+  { name: 'Refined Floor Plans', phase: 'DD' },
+  { name: 'Wall Sections', phase: 'DD' },
+  { name: 'Interior Elevations', phase: 'DD' },
+  { name: 'Door / Window Schedule', phase: 'DD' },
+  { name: 'Material Selections', phase: 'DD' },
+  { name: 'Structural Coordination', phase: 'DD' },
+  { name: 'MEP Coordination', phase: 'DD' },
+  { name: 'Code Review', phase: 'DD' },
+  { name: 'Cover Sheet', phase: 'CD' },
+  { name: 'Drawing Index', phase: 'CD' },
+  { name: 'Site Plan', phase: 'CD' },
+  { name: 'Demolition Plans', phase: 'CD' },
+  { name: 'Foundation Plans', phase: 'CD' },
+  { name: 'Floor Plans', phase: 'CD' },
+  { name: 'Roof Plan', phase: 'CD' },
+  { name: 'Reflected Ceiling Plans', phase: 'CD' },
+  { name: 'Exterior Elevations', phase: 'CD' },
+  { name: 'Building Sections', phase: 'CD' },
+  { name: 'Wall Sections', phase: 'CD' },
+  { name: 'Interior Elevations', phase: 'CD' },
+  { name: 'Door Schedule', phase: 'CD' },
+  { name: 'Window Schedule', phase: 'CD' },
+  { name: 'Finish Schedule', phase: 'CD' },
+  { name: 'Stair / Elevator Details', phase: 'CD' },
+  { name: 'Structural Plans', phase: 'CD' },
+  { name: 'MEP Plans', phase: 'CD' },
+  { name: 'Landscape Plan', phase: 'CD' },
+  { name: 'Specifications', phase: 'CD' },
 ];
 
 export const THEMES = {

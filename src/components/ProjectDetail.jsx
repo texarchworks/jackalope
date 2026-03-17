@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS, PHASE_CONFIG } from "@/lib/constants";
+import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS, PHASE_CONFIG, FEATURES, DRAWING_SET_PHASES, DS_CORAL } from "@/lib/constants";
 import { makeAvatar as av } from "@/lib/helpers";
 import TaskCanvas from "@/components/TaskCanvas";
 import DrawingSet from "@/components/DrawingSet";
@@ -29,7 +29,7 @@ function Modal({ onClose, title, children, wide }) {
     </div></div>);
 }
 
-function TaskForm({ task, onChange, onSubmit, btnLabel, team, locs, subs, cats, locLabel, subLabel, isPM }) {
+function TaskForm({ task, onChange, onSubmit, btnLabel, team, locs, subs, cats, locLabel, subLabel, isPM, isEdit }) {
   const ls = subs[task.loc] || [];
   const statusEntries = Object.entries(STA).filter(([k]) => isPM || k !== "resolved");
   const selCats = (task.category || "").split(",").filter(Boolean);
@@ -37,8 +37,13 @@ function TaskForm({ task, onChange, onSubmit, btnLabel, team, locs, subs, cats, 
     const next = selCats.includes(c) ? selCats.filter((x) => x !== c) : [...selCats, c];
     onChange({ ...task, category: next.join(",") });
   };
+  const isDS = task.task_type === "drawing_set";
   return (<div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
     <div><label style={lb}>Task Title</label><input value={task.title} onChange={(e) => onChange({ ...task, title: e.target.value })} placeholder="Describe the open item…" style={{ ...ins, width: "100%" }} /></div>
+    {FEATURES.DRAWING_SETS && !isEdit && <div style={{ display: "grid", gridTemplateColumns: isDS ? "1fr 1fr" : "1fr", gap: 12 }}>
+      <div><label style={lb}>Type</label><select value={task.task_type || "task"} onChange={(e) => onChange({ ...task, task_type: e.target.value, _template: e.target.value === "drawing_set" ? "architectural" : undefined })} style={{ ...sl, width: "100%", borderColor: isDS ? DS_CORAL : undefined }}><option value="task">Task</option><option value="drawing_set">Drawing Set</option></select></div>
+      {isDS && <div><label style={lb}>Template</label><select value={task._template || "architectural"} onChange={(e) => onChange({ ...task, _template: e.target.value })} style={{ ...sl, width: "100%" }}><option value="architectural">Architectural (34 items)</option><option value="civil">Civil / Landscape (12 items)</option></select></div>}
+    </div>}
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
       <div><label style={lb}>{locLabel}</label><select value={task.loc} onChange={(e) => onChange({ ...task, loc: e.target.value, sub: "" })} style={{ ...sl, width: "100%" }}><option value="">— None —</option>{locs.map((l) => <option key={l.id} value={l.id}>{l.id}: {l.name}</option>)}</select></div>
       <div><label style={lb}>{subLabel}</label><select value={task.sub || ""} onChange={(e) => onChange({ ...task, sub: e.target.value })} style={{ ...sl, width: "100%" }}><option value="">— None —</option>{ls.map((s) => <option key={s.id} value={s.id}>{s.id}: {s.name}</option>)}</select></div>
@@ -80,7 +85,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
   const [notes, setNotes] = useState("");
   const [ext, setExt] = useState([]);
   const [showX, setShowX] = useState(false);
-  const emp = { title: "", loc: p.locs[0]?.id || "", sub: "", priority: "medium", status: "open", assignee: null, category: p.cats[0] || "", dueDate: "", notes: "", source: "manual" };
+  const emp = { title: "", loc: p.locs[0]?.id || "", sub: "", priority: "medium", status: "open", assignee: null, category: p.cats[0] || "", dueDate: "", notes: "", source: "manual", task_type: "task" };
   const [nT, setNT] = useState(emp);
   const [showSettings, setShowSettings] = useState(false);
   const [sTab, setSTab] = useState("team");
@@ -126,14 +131,55 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
     return m;
   }, [p.tasks]);
 
-  // Inline sub-task list for board cards
-  const SubTaskList = ({ taskId }) => {
+  // Collapsible phase state for drawing set checklists
+  const [dsCollapsed, setDsCollapsed] = useState({});
+  const toggleDsPhase = (taskId, phase) => setDsCollapsed(prev => ({ ...prev, [`${taskId}-${phase}`]: !prev[`${taskId}-${phase}`] }));
+
+  // Inline drawing set checklist for board cards
+  const DSChecklist = ({ taskId }) => {
     const children = childMap[taskId] || [];
-    if (children.length === 0) return null;
+    const checkItems = children.filter(c => c.task_type === "checklist_item");
+    if (checkItems.length === 0) return null;
+    const done = checkItems.filter(c => c.status === "resolved").length;
+    return (
+      <div onClick={(e) => e.stopPropagation()} style={{ marginTop: 8, borderTop: `1px solid ${DS_CORAL}33`, paddingTop: 6 }}>
+        <div style={{ fontSize: 9, color: DS_CORAL, fontFamily: M, marginBottom: 4 }}>{done}/{checkItems.length} deliverables</div>
+        {DRAWING_SET_PHASES.map(({ key, label, color }) => {
+          const items = checkItems.filter(c => c.phase === key);
+          if (items.length === 0) return null;
+          const pDone = items.filter(c => c.status === "resolved").length;
+          const isCol = dsCollapsed[`${taskId}-${key}`] !== undefined ? dsCollapsed[`${taskId}-${key}`] : true;
+          return (
+            <div key={key} style={{ marginBottom: 2 }}>
+              <div onClick={() => toggleDsPhase(taskId, key)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 0", cursor: "pointer" }}>
+                <span style={{ fontSize: 8, transform: isCol ? "rotate(0deg)" : "rotate(90deg)", transition: "transform .15s", display: "inline-block", color: T.textMuted }}>▶</span>
+                <span style={{ fontSize: 9, fontWeight: 600, color }}>{label}</span>
+                <span style={{ fontSize: 8, color: pDone === items.length ? "#0F7B6C" : T.textMuted, fontFamily: M, marginLeft: "auto" }}>{pDone}/{items.length}</span>
+              </div>
+              {!isCol && <div style={{ display: "flex", flexDirection: "column", gap: 1, paddingLeft: 12, marginBottom: 4 }}>
+                {items.map(item => (
+                  <label key={item.id} style={{ display: "flex", alignItems: "center", gap: 5, padding: "2px 0", cursor: "pointer", opacity: item.status === "resolved" ? 0.5 : 1 }}>
+                    <input type="checkbox" checked={item.status === "resolved"} onChange={() => onUpdateTask(item.id, { status: item.status === "resolved" ? "open" : "resolved" })} style={{ accentColor: color, width: 11, height: 11, cursor: "pointer", flexShrink: 0 }} />
+                    <span style={{ fontSize: 10, color: T.text, textDecoration: item.status === "resolved" ? "line-through" : "none", fontFamily: F }}>{item.title}</span>
+                  </label>
+                ))}
+              </div>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // Inline sub-task list for board cards (non-checklist children only for drawing_set parents)
+  const SubTaskList = ({ taskId, parentType }) => {
+    const children = childMap[taskId] || [];
+    const subs = parentType === "drawing_set" ? children.filter(c => c.task_type !== "checklist_item") : children;
+    if (subs.length === 0) return null;
     return (
       <div onClick={(e) => e.stopPropagation()} style={{ marginTop: 8, borderTop: "1px solid var(--t-border, #252535)", paddingTop: 6, display: "flex", flexDirection: "column", gap: 4 }}>
-        <div style={{ fontSize: 9, color: T.textMuted, fontFamily: M }}>{children.filter((c) => c.status === "resolved").length}/{children.length} sub-tasks</div>
-        {children.map((ch) => { const cPr = PRI[ch.priority], cSta = STA[ch.status], cA = tm.find((m) => m.id === ch.assignee);
+        <div style={{ fontSize: 9, color: T.textMuted, fontFamily: M }}>{subs.filter((c) => c.status === "resolved").length}/{subs.length} sub-tasks</div>
+        {subs.map((ch) => { const cPr = PRI[ch.priority], cSta = STA[ch.status], cA = tm.find((m) => m.id === ch.assignee);
           return (
             <div key={ch.id} onClick={() => opnE(ch)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 6px", background: "rgba(15,15,22,.4)", borderRadius: 4, borderLeft: `2px solid ${cPr.color}`, cursor: "pointer", opacity: ch.status === "resolved" ? 0.5 : 1 }}>
               <span style={{ fontSize: 8, padding: "1px 3px", borderRadius: 2, background: cSta.bg, color: cSta.color, fontWeight: 600 }}>{cSta.label}</span>
@@ -361,23 +407,24 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
           </div>
           <div style={{padding:8,display:"flex",flexDirection:"column",gap:6}}>
             {col.map((task)=>{const loc=p.locs.find((l)=>l.id===task.loc),a=tm.find((m)=>m.id===task.assignee),pr=PRI[task.priority],sub=task.sub?allSubs.find((s)=>s.id===task.sub):null;
-            const children=childMap[task.id]||[];
-            return(<div key={task.id} draggable onDragStart={()=>setDrag(task)} onDragEnd={()=>setDrag(null)} onClick={()=>setExpandCard(task.id)} style={{background:T.bgElevated,border:`1px solid ${T.border}`,borderLeft:`3px solid ${pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer"}}>
+            const children=childMap[task.id]||[];const isDS=task.task_type==="drawing_set";
+            return(<div key={task.id} draggable onDragStart={()=>setDrag(task)} onDragEnd={()=>setDrag(null)} onClick={()=>setExpandCard(task.id)} style={{background:isDS?`${DS_CORAL}08`:T.bgElevated,border:`1px solid ${isDS?DS_CORAL+"44":T.border}`,borderLeft:`3px solid ${isDS?DS_CORAL:pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer"}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary} title={sub.name}>{sub.id}</Tg>}<Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg>{task.source==="meeting"&&<Tg bg="#FAF5FF" fg="#9333EA">✦</Tg>}<CatTags cat={task.category}/></div>
+                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{isDS&&<Tg bg={DS_CORAL+"22"} fg={DS_CORAL}>Drawing Set</Tg>}{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary} title={sub.name}>{sub.id}</Tg>}<Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg>{task.source==="meeting"&&<Tg bg="#FAF5FF" fg="#9333EA">✦</Tg>}<CatTags cat={task.category}/></div>
                 <div style={{display:"flex",gap:3}}>
                   {canDo(ACTIONS.CREATE_TASK)&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}
                   <button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,display:canDo(ACTIONS.EDIT_TASK,{isOwner:task.assignee===userId})?"inline":"none"}} title="Edit">✎</button>
                   {canDo(ACTIONS.DELETE_TASK)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}
                 </div>
               </div>
-              <div style={{fontSize:12,fontWeight:500,lineHeight:1.3,marginBottom:6}}>{task.title}</div>
+              <div style={{fontSize:isDS?13:12,fontWeight:isDS?700:500,lineHeight:1.3,marginBottom:6}}>{task.title}</div>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 {a?<div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:20,height:20,borderRadius:"50%",background:a.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:7,fontWeight:700,color:"white"}}>{av(a.name)}</div><span style={{fontSize:10,color:T.textSecondary}}>{a.name}</span></div>
                 :<button onClick={(e)=>{e.stopPropagation();setShowAs(task.id);}} style={{fontSize:9,color:"#CA8A04",background:"rgba(202,138,4,.1)",border:"1px dashed rgba(202,138,4,.3)",borderRadius:3,padding:"2px 6px",cursor:"pointer"}}>+ Assign</button>}
                 <div style={{display:"flex",gap:6,alignItems:"center"}}>{children.length>0&&<span style={{fontSize:9,color:T.textMuted,fontFamily:M}}>{children.filter((c)=>c.status==="resolved").length}/{children.length}</span>}{task.dueDate&&<span style={{fontSize:9,color:T.textMuted,fontFamily:M}}>{task.dueDate}</span>}</div>
               </div>
-              <SubTaskList taskId={task.id}/>
+              {isDS&&<DSChecklist taskId={task.id}/>}
+              <SubTaskList taskId={task.id} parentType={task.task_type}/>
             </div>);})}
           </div></div>);})}
       </div>}
@@ -390,10 +437,10 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
           </div>
           <div style={{padding:8,display:"flex",flexDirection:"column",gap:6}}>
             {col.map((task)=>{const loc=p.locs.find((l)=>l.id===task.loc),a=tm.find((m)=>m.id===task.assignee),sta=STA[task.status],sub=task.sub?allSubs.find((s)=>s.id===task.sub):null;
-            const children=childMap[task.id]||[];
-            return(<div key={task.id} draggable onDragStart={()=>setDrag(task)} onDragEnd={()=>setDrag(null)} onClick={()=>setExpandCard(task.id)} style={{background:T.bgElevated,border:`1px solid ${cfg.color}33`,borderLeft:`3px solid ${sta.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
+            const children=childMap[task.id]||[];const isDS=task.task_type==="drawing_set";
+            return(<div key={task.id} draggable onDragStart={()=>setDrag(task)} onDragEnd={()=>setDrag(null)} onClick={()=>setExpandCard(task.id)} style={{background:isDS?`${DS_CORAL}08`:T.bgElevated,border:`1px solid ${isDS?DS_CORAL+"44":cfg.color+"33"}`,borderLeft:`3px solid ${isDS?DS_CORAL:sta.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary} title={sub.name}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg>{task.source==="meeting"&&<Tg bg="#FAF5FF" fg="#9333EA">✦</Tg>}<CatTags cat={task.category}/></div>
+                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{isDS&&<Tg bg={DS_CORAL+"22"} fg={DS_CORAL}>Drawing Set</Tg>}{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary} title={sub.name}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg>{task.source==="meeting"&&<Tg bg="#FAF5FF" fg="#9333EA">✦</Tg>}<CatTags cat={task.category}/></div>
                 <div style={{display:"flex",gap:3}}>
                   {canDo(ACTIONS.CREATE_TASK)&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}
                   <button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,display:canDo(ACTIONS.EDIT_TASK,{isOwner:task.assignee===userId})?"inline":"none"}} title="Edit">✎</button>
@@ -406,7 +453,8 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
                 :<button onClick={(e)=>{e.stopPropagation();setShowAs(task.id);}} style={{fontSize:9,color:"#CA8A04",background:"rgba(202,138,4,.1)",border:"1px dashed rgba(202,138,4,.3)",borderRadius:3,padding:"2px 6px",cursor:"pointer"}}>+ Assign</button>}
                 <div style={{display:"flex",gap:6,alignItems:"center"}}>{children.length>0&&<span style={{fontSize:9,color:T.textMuted,fontFamily:M}}>{children.filter((c)=>c.status==="resolved").length}/{children.length}</span>}{task.dueDate&&<span style={{fontSize:9,color:T.textMuted,fontFamily:M}}>{task.dueDate}</span>}</div>
               </div>
-              <SubTaskList taskId={task.id}/>
+              {task.task_type==="drawing_set"&&<DSChecklist taskId={task.id}/>}
+              <SubTaskList taskId={task.id} parentType={task.task_type}/>
             </div>);})}
           </div></div>);})}
       </div>}
@@ -421,15 +469,16 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
               <span style={{background:T.border,borderRadius:8,padding:"1px 6px",fontSize:11,color:T.textSecondary,fontFamily:M}}>{col.length}</span>
             </div>
             <div style={{padding:8,display:"flex",flexDirection:"column",gap:6}}>
-              {col.map((task)=>{const loc=p.locs.find((l)=>l.id===task.loc),pr=PRI[task.priority],sta=STA[task.status],sub=task.sub?allSubs.find((s)=>s.id===task.sub):null;const children=childMap[task.id]||[];
-              return(<div key={task.id} onClick={()=>setExpandCard(task.id)} style={{background:T.bgElevated,border:`1px solid ${T.border}`,borderLeft:`3px solid ${pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
+              {col.map((task)=>{const loc=p.locs.find((l)=>l.id===task.loc),pr=PRI[task.priority],sta=STA[task.status],sub=task.sub?allSubs.find((s)=>s.id===task.sub):null;const children=childMap[task.id]||[];const isDS=task.task_type==="drawing_set";
+              return(<div key={task.id} onClick={()=>setExpandCard(task.id)} style={{background:isDS?`${DS_CORAL}08`:T.bgElevated,border:`1px solid ${isDS?DS_CORAL+"44":T.border}`,borderLeft:`3px solid ${isDS?DS_CORAL:pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
+                  <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{isDS&&<Tg bg={DS_CORAL+"22"} fg={DS_CORAL}>Drawing Set</Tg>}{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
                   <div style={{display:"flex",gap:3}}>{canDo(ACTIONS.CREATE_TASK)&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}<button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,display:canDo(ACTIONS.EDIT_TASK,{isOwner:task.assignee===userId})?"inline":"none"}} title="Edit">✎</button>{canDo(ACTIONS.DELETE_TASK)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}</div>
                 </div>
                 <div style={{fontSize:12,fontWeight:500,lineHeight:1.3,marginBottom:4}}>{task.title}</div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>{task.dueDate&&<span style={{fontSize:9,color:T.textMuted,fontFamily:M}}>{task.dueDate}</span>}{children.length>0&&<span style={{fontSize:9,color:T.textMuted,fontFamily:M}}>{children.filter((c)=>c.status==="resolved").length}/{children.length}</span>}</div>
-                <SubTaskList taskId={task.id}/>
+                {task.task_type==="drawing_set"&&<DSChecklist taskId={task.id}/>}
+              <SubTaskList taskId={task.id} parentType={task.task_type}/>
               </div>);})}
             </div></div>);}).filter(Boolean)}
         </div>;})()}
@@ -442,10 +491,10 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
             <span style={{background:T.border,borderRadius:8,padding:"1px 6px",fontSize:11,color:T.textSecondary,fontFamily:M}}>{col.length}</span>
           </div>
           <div style={{padding:8,display:"flex",flexDirection:"column",gap:6}}>
-            {col.map((task)=>{const a=tm.find((m)=>m.id===task.assignee),pr=PRI[task.priority],sta=STA[task.status],sub=task.sub?allSubs.find((s)=>s.id===task.sub):null;const children=childMap[task.id]||[];
-            return(<div key={task.id} onClick={()=>setExpandCard(task.id)} style={{background:T.bgElevated,border:`1px solid ${T.border}`,borderLeft:`3px solid ${pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
+            {col.map((task)=>{const a=tm.find((m)=>m.id===task.assignee),pr=PRI[task.priority],sta=STA[task.status],sub=task.sub?allSubs.find((s)=>s.id===task.sub):null;const children=childMap[task.id]||[];const isDS=task.task_type==="drawing_set";
+            return(<div key={task.id} onClick={()=>setExpandCard(task.id)} style={{background:isDS?`${DS_CORAL}08`:T.bgElevated,border:`1px solid ${isDS?DS_CORAL+"44":T.border}`,borderLeft:`3px solid ${isDS?DS_CORAL:pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
+                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{isDS&&<Tg bg={DS_CORAL+"22"} fg={DS_CORAL}>Drawing Set</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
                 <div style={{display:"flex",gap:3}}>{canDo(ACTIONS.CREATE_TASK)&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}<button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,display:canDo(ACTIONS.EDIT_TASK,{isOwner:task.assignee===userId})?"inline":"none"}} title="Edit">✎</button>{canDo(ACTIONS.DELETE_TASK)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}</div>
               </div>
               <div style={{fontSize:12,fontWeight:500,lineHeight:1.3,marginBottom:4}}>{task.title}</div>
@@ -453,7 +502,8 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
                 {a?<div style={{display:"flex",alignItems:"center",gap:3}}><div style={{width:16,height:16,borderRadius:"50%",background:a.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:6,fontWeight:700,color:"white"}}>{av(a.name)}</div><span style={{fontSize:9,color:T.textSecondary}}>{a.name}</span></div>:<span/>}
                 <div style={{display:"flex",gap:6}}>{task.dueDate&&<span style={{fontSize:9,color:T.textMuted,fontFamily:M}}>{task.dueDate}</span>}{children.length>0&&<span style={{fontSize:9,color:T.textMuted,fontFamily:M}}>{children.filter((c)=>c.status==="resolved").length}/{children.length}</span>}</div>
               </div>
-              <SubTaskList taskId={task.id}/>
+              {task.task_type==="drawing_set"&&<DSChecklist taskId={task.id}/>}
+              <SubTaskList taskId={task.id} parentType={task.task_type}/>
             </div>);})}
           </div></div>);}).filter(Boolean)}
       </div>}
@@ -467,10 +517,10 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
               {parentLoc&&<span style={{fontSize:9,color:parentLoc.color,fontFamily:M}}>{p.locLabel} {parentLoc.id}</span>}
             </div>
             <div style={{padding:8,display:"flex",flexDirection:"column",gap:6}}>
-              {col.map((task)=>{const a=tm.find((m)=>m.id===task.assignee),pr=PRI[task.priority],sta=STA[task.status],loc=p.locs.find((l)=>l.id===task.loc);const children=childMap[task.id]||[];
-              return(<div key={task.id} onClick={()=>setExpandCard(task.id)} style={{background:T.bgElevated,border:`1px solid ${T.border}`,borderLeft:`3px solid ${pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
+              {col.map((task)=>{const a=tm.find((m)=>m.id===task.assignee),pr=PRI[task.priority],sta=STA[task.status],loc=p.locs.find((l)=>l.id===task.loc);const children=childMap[task.id]||[];const isDS=task.task_type==="drawing_set";
+              return(<div key={task.id} onClick={()=>setExpandCard(task.id)} style={{background:isDS?`${DS_CORAL}08`:T.bgElevated,border:`1px solid ${isDS?DS_CORAL+"44":T.border}`,borderLeft:`3px solid ${isDS?DS_CORAL:pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
+                  <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{isDS&&<Tg bg={DS_CORAL+"22"} fg={DS_CORAL}>Drawing Set</Tg>}{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
                   <div style={{display:"flex",gap:3}}>{canDo(ACTIONS.CREATE_TASK)&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}<button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,display:canDo(ACTIONS.EDIT_TASK,{isOwner:task.assignee===userId})?"inline":"none"}} title="Edit">✎</button>{canDo(ACTIONS.DELETE_TASK)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}</div>
                 </div>
                 <div style={{fontSize:12,fontWeight:500,lineHeight:1.3,marginBottom:4}}>{task.title}</div>
@@ -478,7 +528,8 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
                   {a?<div style={{display:"flex",alignItems:"center",gap:3}}><div style={{width:16,height:16,borderRadius:"50%",background:a.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:6,fontWeight:700,color:"white"}}>{av(a.name)}</div><span style={{fontSize:9,color:T.textSecondary}}>{a.name}</span></div>:<span/>}
                   <div style={{display:"flex",gap:6}}>{task.dueDate&&<span style={{fontSize:9,color:T.textMuted,fontFamily:M}}>{task.dueDate}</span>}{children.length>0&&<span style={{fontSize:9,color:T.textMuted,fontFamily:M}}>{children.filter((c)=>c.status==="resolved").length}/{children.length}</span>}</div>
                 </div>
-                <SubTaskList taskId={task.id}/>
+                {task.task_type==="drawing_set"&&<DSChecklist taskId={task.id}/>}
+              <SubTaskList taskId={task.id} parentType={task.task_type}/>
               </div>);})}
             </div></div>);}).filter(Boolean)}
         </div>;})()}
@@ -489,14 +540,15 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         {[{l:p.locLabel,k:"loc"},{l:p.subLabel,k:"sub"},{l:"Task",k:"task"},{l:"Priority",k:"priority"},{l:"Status",k:"status"},{l:"Assignee",k:"assignee"},{l:"Category",k:"category"},{l:"Due",k:"due"},{l:"",k:"actions"}].map((h)=><th key={h.k||h.l} onClick={()=>h.k&&h.k!=="actions"&&toggleListSort(h.k)} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:600,color:listSort.col===h.k?T.text:T.textMuted,textTransform:"uppercase",fontFamily:M,cursor:h.k&&h.k!=="actions"?"pointer":"default",userSelect:"none"}}>{h.l}{listSort.col===h.k?<span style={{marginLeft:4}}>{listSort.dir==="asc"?"▲":"▼"}</span>:""}</th>)}
       </tr></thead><tbody>
         {sortByList(fil).map((task)=>{const loc=p.locs.find((l)=>l.id===task.loc),a=tm.find((m)=>m.id===task.assignee),pr=PRI[task.priority],sta=STA[task.status],sub=task.sub?allSubs.find((x)=>x.id===task.sub):null;
-        const children=childMap[task.id]||[];
-        return(<><tr key={task.id} style={{borderBottom:`1px solid ${T.borderSubtle}`,cursor:"pointer"}} onClick={()=>setExpandCard(task.id)} >
+        const children=childMap[task.id]||[];const isDS=task.task_type==="drawing_set";
+        return(<><tr key={task.id} style={{borderBottom:`1px solid ${T.borderSubtle}`,cursor:"pointer",borderLeft:isDS?`3px solid ${DS_CORAL}`:"3px solid transparent",background:isDS?`${DS_CORAL}06`:"transparent"}} onClick={()=>setExpandCard(task.id)} >
           <td style={{padding:"8px 12px"}}>{loc?<span style={{padding:"2px 8px",borderRadius:4,fontSize:11,fontWeight:600,background:loc.color,color:"white"}}>{task.loc}</span>:"—"}</td>
           <td style={{padding:"8px 12px"}}>{sub?<span style={{fontSize:10,color:T.text,background:T.borderSubtle,padding:"2px 5px",borderRadius:3}}>{sub.id}</span>:"—"}</td>
-          <td style={{padding:"8px 12px",fontSize:12,fontWeight:500,maxWidth:280}}>
+          <td style={{padding:"8px 12px",fontSize:12,fontWeight:isDS?700:500,maxWidth:280}}>
             <div style={{display:"flex",alignItems:"center",gap:4}}>
               {children.length>0&&<button onClick={(e)=>{e.stopPropagation();setCollapsedRows((r)=>({...r,[task.id]:!r[task.id]}));}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,padding:"0 2px",width:16,flexShrink:0,transition:"transform .15s",transform:collapsedRows[task.id]?"rotate(-90deg)":"rotate(0deg)"}}>▼</button>}
               {children.length===0&&<span style={{width:16,flexShrink:0}}/>}
+              {isDS&&<span style={{fontSize:8,padding:"1px 5px",borderRadius:3,background:DS_CORAL+"22",color:DS_CORAL,fontWeight:600}}>DS</span>}
               <span>{task.title}</span>
               {children.length>0&&<span style={{marginLeft:4,fontSize:9,color:T.textMuted,fontFamily:M}}>{children.filter((c)=>c.status==="resolved").length}/{children.length}</span>}
             </div>
@@ -527,7 +579,8 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
             </div>
           </td>
         </tr>
-        {!collapsedRows[task.id]&&children.map((ch)=>{const cLoc=p.locs.find((l)=>l.id===ch.loc),cA=tm.find((m)=>m.id===ch.assignee),cPr=PRI[ch.priority],cSta=STA[ch.status],cSub=ch.sub?allSubs.find((x)=>x.id===ch.sub):null;
+        {isDS&&!collapsedRows[task.id]&&<tr key={`ds-${task.id}`}><td colSpan={9} style={{padding:"0 12px 8px 40px",background:`${DS_CORAL}06`,borderBottom:`1px solid ${T.borderSubtle}`}}><DSChecklist taskId={task.id}/></td></tr>}
+        {!collapsedRows[task.id]&&(isDS?children.filter(c=>c.task_type!=="checklist_item"):children).map((ch)=>{const cLoc=p.locs.find((l)=>l.id===ch.loc),cA=tm.find((m)=>m.id===ch.assignee),cPr=PRI[ch.priority],cSta=STA[ch.status],cSub=ch.sub?allSubs.find((x)=>x.id===ch.sub):null;
         return(<tr key={ch.id} style={{borderBottom:`1px solid ${T.borderSubtle}`,cursor:"pointer",background:T.bgSubRow,opacity:ch.status==="resolved"?0.5:1}} onClick={()=>setExpandCard(ch.id)} onMouseEnter={(e)=>{e.currentTarget.style.background=T.bgHover;e.currentTarget.style.opacity="1";}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgSubRow;e.currentTarget.style.opacity=ch.status==="resolved"?"0.5":"1";}}>
           <td style={{padding:"6px 12px 6px 24px"}}>{cLoc?<span style={{padding:"1px 6px",borderRadius:3,fontSize:10,fontWeight:600,background:cLoc.color,color:"white"}}>{ch.loc}</span>:"—"}</td>
           <td style={{padding:"6px 12px"}}>{cSub?<span style={{fontSize:9,color:T.text,background:T.borderSubtle,padding:"1px 4px",borderRadius:3}}>{cSub.id}</span>:"—"}</td>
@@ -592,7 +645,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         <span style={{fontSize:11,color:T.textMuted,fontFamily:M}}>Source: {eT.source||"manual"} · Created: {eT.created}</span>
         <button onClick={()=>delT(eT.id)} style={{...bs,background:"#E03E3E",color:"white",padding:"3px 10px",fontSize:11}}>Delete</button>
       </div>
-      <TaskForm task={eT} onChange={setET} onSubmit={savE} btnLabel="Save Changes" team={tm} locs={p.locs} subs={p.subs} cats={p.cats} locLabel={p.locLabel} subLabel={p.subLabel} isPM={isPM} />
+      <TaskForm task={eT} onChange={setET} onSubmit={savE} btnLabel="Save Changes" team={tm} locs={p.locs} subs={p.subs} cats={p.cats} locLabel={p.locLabel} subLabel={p.subLabel} isPM={isPM} isEdit />
     </Modal>}
 
     {showAs&&<Modal onClose={()=>setShowAs(null)} title="Assign Team Member">
@@ -865,7 +918,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
     {addSubForBoard&&(()=>{const parentTask=p.tasks.find((t)=>t.id===addSubForBoard);return(
     <Modal onClose={()=>{setAddSubForBoard(null);setNT({...emp});}} title="Add Sub-Task">
       <p style={{fontSize:12,color:T.textMuted,margin:"0 0 12px"}}>Under: {parentTask?.title}</p>
-      <TaskForm task={nT} onChange={setNT} onSubmit={async()=>{if(!nT.title?.trim())return;await onCreateTask({...nT,loc:parentTask?.loc||"",sub:parentTask?.sub||"",parent_task_id:addSubForBoard,status:nT.status||"open",source:"manual"});setNT({...emp});setAddSubForBoard(null);}} btnLabel="Create Sub-Task" team={tm} locs={p.locs} subs={p.subs} cats={p.cats} locLabel={p.locLabel} subLabel={p.subLabel} isPM={isPM} />
+      <TaskForm task={nT} onChange={setNT} onSubmit={async()=>{if(!nT.title?.trim())return;await onCreateTask({...nT,loc:parentTask?.loc||"",sub:parentTask?.sub||"",parent_task_id:addSubForBoard,status:nT.status||"open",source:"manual"});setNT({...emp});setAddSubForBoard(null);}} btnLabel="Create Sub-Task" team={tm} locs={p.locs} subs={p.subs} cats={p.cats} locLabel={p.locLabel} subLabel={p.subLabel} isPM={isPM} isEdit />
     </Modal>);})()}
 
     {/* Delete Confirmation Modal */}

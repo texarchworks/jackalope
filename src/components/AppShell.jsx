@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS, DEFAULT_CATEGORIES, THEMES } from "@/lib/constants";
+import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS, DEFAULT_CATEGORIES, THEMES, CIVIL_TEMPLATE, ARCHITECTURAL_TEMPLATE } from "@/lib/constants";
 import { makeAvatar as av, isOverdue } from "@/lib/helpers";
 import MyWork from "@/components/MyWork";
 import ProjectsHome from "@/components/ProjectsHome";
@@ -350,9 +350,38 @@ export default function AppShell() {
         parent_task_id: data.parent_task_id || null,
         canvas_x: data.canvas_x, canvas_y: data.canvas_y,
       };
-      setProjects((ps) =>
-        ps.map((p) => (p.id === projId ? { ...p, tasks: [...p.tasks, newTask] } : p))
-      );
+      // Bulk-create checklist children for drawing_set tasks
+      if (data.task_type === "drawing_set" && task._template) {
+        const tpl = task._template === "civil" ? CIVIL_TEMPLATE : ARCHITECTURAL_TEMPLATE;
+        const childRows = tpl.map((item) => ({
+          project_id: projId,
+          title: item.name,
+          task_type: "checklist_item",
+          parent_task_id: data.id,
+          status: "open",
+          priority: task.priority || "medium",
+          location_code: task.loc || "",
+          sub_location_code: task.sub || "",
+          phase: item.phase,
+          source: "manual",
+          category: "",
+          created_by: user.id,
+        }));
+        const { data: children } = await supabase.from("tasks").insert(childRows).select();
+        const newChildren = (children || []).map((c) => ({
+          ...c, loc: c.location_code, sub: c.sub_location_code,
+          assignee: c.assignee_id, dueDate: c.due_date || "",
+          created: c.created_at?.split("T")[0] || "",
+          parent_task_id: c.parent_task_id,
+        }));
+        setProjects((ps) =>
+          ps.map((p) => (p.id === projId ? { ...p, tasks: [...p.tasks, newTask, ...newChildren] } : p))
+        );
+      } else {
+        setProjects((ps) =>
+          ps.map((p) => (p.id === projId ? { ...p, tasks: [...p.tasks, newTask] } : p))
+        );
+      }
     }
     return { data, error };
   };

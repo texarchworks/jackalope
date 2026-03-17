@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { PRIORITIES as PRI, STATUSES as STA } from "@/lib/constants";
+import { PRIORITIES as PRI, STATUSES as STA, DS_CORAL, DRAWING_SET_PHASES } from "@/lib/constants";
 import { makeAvatar as av } from "@/lib/helpers";
 
 const M = "'IBM Plex Mono', monospace";
@@ -126,11 +126,12 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
       else if (t.loc) { if (!tasksByLoc[t.loc]) tasksByLoc[t.loc] = []; tasksByLoc[t.loc].push(t); }
       else { rootTasks.push(t); }
     });
-    // Sort within each group
-    Object.keys(tasksByLoc).forEach((k) => { tasksByLoc[k] = sortTasks(tasksByLoc[k]); });
-    Object.keys(tasksBySub).forEach((k) => { tasksBySub[k] = sortTasks(tasksBySub[k]); });
+    // Sort within each group — drawing_sets always first
+    const dsFirst = (arr) => { const sorted = sortTasks(arr); return sorted.sort((a, b) => (a.task_type === "drawing_set" ? 0 : 1) - (b.task_type === "drawing_set" ? 0 : 1)); };
+    Object.keys(tasksByLoc).forEach((k) => { tasksByLoc[k] = dsFirst(tasksByLoc[k]); });
+    Object.keys(tasksBySub).forEach((k) => { tasksBySub[k] = dsFirst(tasksBySub[k]); });
     Object.keys(childTasks).forEach((k) => { childTasks[k] = sortTasks(childTasks[k]); });
-    return { tasksByLoc, tasksBySub, childTasks, rootTasks: sortTasks(rootTasks) };
+    return { tasksByLoc, tasksBySub, childTasks, rootTasks: dsFirst(rootTasks) };
   }, [p.tasks, sortBy]);
 
   // Layout
@@ -146,15 +147,22 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
     const placeTaskSubs = (task, taskX, taskY, subX) => {
       const isExp = isLocked(task.id);
       const effectiveSubX = isExp ? subX + DETAIL_W + DETAIL_GAP : subX;
-      const effectiveTaskH = isExp ? Math.max(TASK_H, DETAIL_H_TASK) : TASK_H;
-      const subs = tree.childTasks[task.id] || [];
+      const isDS = task.task_type === "drawing_set";
+      const allChildren = tree.childTasks[task.id] || [];
+      // For drawing_set: checklist_items render inside the node, only task-type children get wired nodes
+      const subs = isDS ? allChildren.filter(c => c.task_type !== "checklist_item") : allChildren;
+      const checkItems = isDS ? allChildren.filter(c => c.task_type === "checklist_item") : [];
+      // Drawing set node is taller to fit inline checklist (collapsed: just phase headers)
+      const dsExtraH = isDS && checkItems.length > 0 ? Math.min(checkItems.length, 3) * 14 + 30 : 0;
+      const baseTaskH = TASK_H + dsExtraH;
+      const effectiveTaskH = isExp ? Math.max(baseTaskH, DETAIL_H_TASK) : baseTaskH;
       let stY = taskY;
       subs.forEach((st) => {
         const stColor = st.status === "resolved" ? "#0F7B6C44" : (PRI[st.priority]?.color || T.border);
         const isStExp = isLocked(st.id);
         const effectiveStH = isStExp ? Math.max(STASK_H, DETAIL_H_SUB) : STASK_H;
         pos[st.id] = { x: effectiveSubX, y: stY, w: STASK_W, h: STASK_H, type: "subtask", data: st, expanded: isStExp };
-        wires.push({ x1: taskX + TASK_W + (isExp ? DETAIL_W + DETAIL_GAP : 0), y1: taskY + TASK_H / 2, x2: effectiveSubX, y2: stY + STASK_H / 2, color: stColor, dashed: st.status === "resolved", taskId: st.id });
+        wires.push({ x1: taskX + TASK_W + (isExp ? DETAIL_W + DETAIL_GAP : 0), y1: taskY + baseTaskH / 2, x2: effectiveSubX, y2: stY + STASK_H / 2, color: stColor, dashed: st.status === "resolved", taskId: st.id });
         stY += effectiveStH + ROW_GAP;
       });
       return { stEnd: stY, effectiveTaskH };
@@ -185,10 +193,13 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
         let taskY = subY;
         subTasks.forEach((task) => {
           const tY = Math.max(taskY, subY);
-          const tColor = task.status === "resolved" ? "#0F7B6C44" : (PRI[task.priority]?.color || T.border);
+          const tColor = task.status === "resolved" ? "#0F7B6C44" : (task.task_type === "drawing_set" ? DS_CORAL : (PRI[task.priority]?.color || T.border));
           const isExp = isLocked(task.id);
-          pos[task.id] = { x: col2Sub, y: tY, w: TASK_W, h: TASK_H, type: "task", data: task, expanded: isExp };
-          wires.push({ x1: col1 + SUB_W, y1: subY + SUB_H / 2, x2: col2Sub, y2: tY + TASK_H / 2, color: tColor, dashed: task.status === "resolved", taskId: task.id });
+          const tCheckItems = task.task_type === "drawing_set" ? (tree.childTasks[task.id] || []).filter(c => c.task_type === "checklist_item") : [];
+          const tDsExtra = tCheckItems.length > 0 ? Math.min(tCheckItems.length, 3) * 14 + 30 : 0;
+          const tH = TASK_H + tDsExtra;
+          pos[task.id] = { x: col2Sub, y: tY, w: TASK_W, h: tH, type: "task", data: task, expanded: isExp };
+          wires.push({ x1: col1 + SUB_W, y1: subY + SUB_H / 2, x2: col2Sub, y2: tY + tH / 2, color: tColor, dashed: task.status === "resolved", taskId: task.id });
           const { stEnd, effectiveTaskH } = placeTaskSubs(task, col2Sub, tY, col3FromSub);
           taskY = Math.max(tY + effectiveTaskH + ROW_GAP, stEnd);
         });
@@ -198,10 +209,13 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
 
       directTasks.forEach((task) => {
         const tY = Math.max(childY, locY);
-        const tColor = task.status === "resolved" ? "#0F7B6C44" : (PRI[task.priority]?.color || loc.color);
+        const tColor = task.status === "resolved" ? "#0F7B6C44" : (task.task_type === "drawing_set" ? DS_CORAL : (PRI[task.priority]?.color || loc.color));
         const isExp = isLocked(task.id);
-        pos[task.id] = { x: col2Direct, y: tY, w: TASK_W, h: TASK_H, type: "task", data: task, expanded: isExp };
-        wires.push({ x1: col0 + LOC_W, y1: locY + LOC_H / 2, x2: col2Direct, y2: tY + TASK_H / 2, color: tColor, dashed: task.status === "resolved", taskId: task.id });
+        const tCheckItems = task.task_type === "drawing_set" ? (tree.childTasks[task.id] || []).filter(c => c.task_type === "checklist_item") : [];
+        const tDsExtra = tCheckItems.length > 0 ? Math.min(tCheckItems.length, 3) * 14 + 30 : 0;
+        const tH = TASK_H + tDsExtra;
+        pos[task.id] = { x: col2Direct, y: tY, w: TASK_W, h: tH, type: "task", data: task, expanded: isExp };
+        wires.push({ x1: col0 + LOC_W, y1: locY + LOC_H / 2, x2: col2Direct, y2: tY + tH / 2, color: tColor, dashed: task.status === "resolved", taskId: task.id });
         hadChildren = true;
         const { stEnd, effectiveTaskH } = placeTaskSubs(task, col2Direct, tY, col3Direct);
         childY = Math.max(childY, Math.max(tY + effectiveTaskH + ROW_GAP, stEnd));
@@ -342,21 +356,26 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
       const task = n.data; const assignee = tm.find((m) => m.id === task.assignee);
       const pr = PRI[task.priority]; const sta = STA[task.status]; const progress = getProgress(task.id);
       const isRes = task.status === "resolved"; const isCritHigh = task.priority === "critical" || task.priority === "high";
-      const borderColor = isRes ? T.border : pr.color;
+      const isDS = task.task_type === "drawing_set";
+      const borderColor = isRes ? T.border : (isDS ? DS_CORAL : pr.color);
       const isLocked = n.expanded;
       const isShowDetail = isHov || isLocked;
       const openStatusMenu = (e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagMenu({ taskId: task.id, type: "status", x: r.left, y: r.bottom + 4 }); };
       const openPriorityMenu = (e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagMenu({ taskId: task.id, type: "priority", x: r.left, y: r.bottom + 4 }); };
       const overdue = task.dueDate && task.dueDate < new Date().toISOString().split("T")[0] && task.status !== "resolved";
+      // Drawing set inline checklist data
+      const dsCheckItems = isDS ? (tree.childTasks[task.id] || []).filter(c => c.task_type === "checklist_item") : [];
+      const dsDone = dsCheckItems.filter(c => c.status === "resolved").length;
       const totalW = n.w + (isShowDetail ? DETAIL_W + DETAIL_GAP : 0);
       const nodeH = n.h + (progress ? 10 : 0);
       const detailH = Math.max(nodeH, 120);
       return (<foreignObject key={id} x={n.x} y={n.y} width={totalW + 4} height={Math.max(nodeH, isShowDetail ? detailH : nodeH)} style={{ overflow: "visible" }}>
         <div onMouseEnter={() => setHoveredNode(id)} onMouseLeave={() => setHoveredNode(null)} style={{ display: "flex", gap: DETAIL_GAP }}>
           <div
-            style={{ width: n.w, flexShrink: 0, background: isRes ? T.bgCard : T.bgElevated, border: `1.5px solid ${borderColor}`, borderLeft: `3px solid ${pr.color}`, borderRadius: "0 8px 8px 0", padding: "8px 10px", boxSizing: "border-box", opacity: isRes ? 0.5 : opacity, boxShadow: isCritHigh && !isRes ? `0 0 10px ${pr.color}44` : "none", transition: "opacity .3s" }}>
+            style={{ width: n.w, flexShrink: 0, background: isDS ? `${DS_CORAL}08` : (isRes ? T.bgCard : T.bgElevated), border: `1.5px solid ${borderColor}`, borderLeft: `3px solid ${isDS ? DS_CORAL : pr.color}`, borderRadius: "0 8px 8px 0", padding: "8px 10px", boxSizing: "border-box", opacity: isRes ? 0.5 : opacity, boxShadow: isDS ? `0 0 12px ${DS_CORAL}22` : (isCritHigh && !isRes ? `0 0 10px ${pr.color}44` : "none"), transition: "opacity .3s" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
               <div style={{ display: "flex", gap: 3 }}>
+                {isDS && <span style={{ fontSize: 8, padding: "1px 4px", borderRadius: 2, background: DS_CORAL + "22", color: DS_CORAL, fontWeight: 700 }}>DS</span>}
                 <span onClick={openStatusMenu} style={{ fontSize: 9, padding: "1px 4px", borderRadius: 2, background: sta.bg, color: sta.color, fontWeight: 600, cursor: "pointer" }} title="Change status">{sta.label} ▾</span>
                 <span onClick={openPriorityMenu} style={{ fontSize: 9, padding: "1px 4px", borderRadius: 2, background: pr.bg, color: pr.color, fontWeight: 600, cursor: "pointer" }} title="Change priority">{pr.label} ▾</span>
               </div>
@@ -366,15 +385,29 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
                 {!permissions.isViewer&&<button onClick={(e) => { e.stopPropagation(); onEditTask(task); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, fontSize: 10, padding: "0 2px" }} title="Edit">✎</button>}
               </div>
             </div>
-            <div style={{ fontSize: 11, fontWeight: 500, lineHeight: 1.3, color: isRes ? T.textMuted : T.text, textDecoration: isRes ? "line-through" : "none", marginBottom: 4 }}>{task.title.length > 42 ? task.title.substring(0, 42) + "…" : task.title}</div>
+            <div style={{ fontSize: isDS ? 12 : 11, fontWeight: isDS ? 700 : 500, lineHeight: 1.3, color: isRes ? T.textMuted : T.text, textDecoration: isRes ? "line-through" : "none", marginBottom: 4 }}>{task.title.length > 42 ? task.title.substring(0, 42) + "…" : task.title}</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               {assignee ? <div style={{ display: "flex", alignItems: "center", gap: 3 }}><div style={{ width: 16, height: 16, borderRadius: "50%", background: assignee.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 6, fontWeight: 700, color: "white" }}>{av(assignee.name)}</div><span style={{ fontSize: 9, color: T.textSecondary }}>{assignee.name}</span></div> : <span />}
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                {progress && <span style={{ fontSize: 9, color: T.textMuted, fontFamily: M }}>{progress.rv}/{progress.tot}</span>}
+                {isDS && dsCheckItems.length > 0 && <span style={{ fontSize: 9, color: DS_CORAL, fontFamily: M }}>{dsDone}/{dsCheckItems.length}</span>}
+                {progress && !isDS && <span style={{ fontSize: 9, color: T.textMuted, fontFamily: M }}>{progress.rv}/{progress.tot}</span>}
                 {task.dueDate && <span style={{ fontSize: 9, color: overdue ? "#F87171" : T.textMuted, fontWeight: overdue ? 600 : 400, fontFamily: M }}>{task.dueDate}{overdue ? " ⚠" : ""}</span>}
               </div>
             </div>
-            {progress && <div style={{ marginTop: 3, height: 2, background: T.border, borderRadius: 1, overflow: "hidden" }}><div style={{ height: "100%", width: `${progress.pct}%`, background: progress.pct === 100 ? "#0F7B6C" : T.text, borderRadius: 1 }} /></div>}
+            {progress && !isDS && <div style={{ marginTop: 3, height: 2, background: T.border, borderRadius: 1, overflow: "hidden" }}><div style={{ height: "100%", width: `${progress.pct}%`, background: progress.pct === 100 ? "#0F7B6C" : T.text, borderRadius: 1 }} /></div>}
+            {isDS && dsCheckItems.length > 0 && <div style={{ marginTop: 4, borderTop: `1px solid ${DS_CORAL}33`, paddingTop: 3 }}>
+              {DRAWING_SET_PHASES.map(({ key, label, color }) => {
+                const items = dsCheckItems.filter(c => c.phase === key);
+                if (items.length === 0) return null;
+                const pDone = items.filter(c => c.status === "resolved").length;
+                return <div key={key} style={{ marginBottom: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 3, padding: "1px 0" }}>
+                    <span style={{ fontSize: 8, fontWeight: 600, color }}>{key}</span>
+                    <span style={{ fontSize: 7, color: pDone === items.length ? "#0F7B6C" : T.textMuted, fontFamily: M }}>{pDone}/{items.length}</span>
+                  </div>
+                </div>;
+              })}
+            </div>}
           </div>
           {isShowDetail && <div style={{ width: DETAIL_W, background: T.bgCard, border: `1px solid ${isLocked ? T.text+"44" : T.border}`, borderRadius: 6, padding: "8px 10px", boxSizing: "border-box", fontSize: 10, color: T.textSecondary, lineHeight: 1.6, overflow: "hidden", opacity: isRes ? 0.5 : 1 }}>
             <div style={{ fontSize: 9, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", fontFamily: M, marginBottom: 4, letterSpacing: ".05em" }}>Details</div>
