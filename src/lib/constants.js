@@ -1,5 +1,5 @@
 export const FEATURES = {
-  ENTITIES_V2: false, // DO NOT flip to true until testing is complete
+  ENTITIES_V2: true,
 };
 
 export const ENTITY_TYPES = {
