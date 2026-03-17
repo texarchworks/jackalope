@@ -4,11 +4,9 @@ import { supabase } from "@/lib/supabase";
 import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS, PHASE_CONFIG, FEATURES, DRAWING_SET_PHASES, DS_CORAL } from "@/lib/constants";
 import { makeAvatar as av } from "@/lib/helpers";
 import TaskCanvas from "@/components/TaskCanvas";
-import DrawingSet from "@/components/DrawingSet";
 import usePermissions from "@/hooks/usePermissions";
 import { ACTIONS } from "@/lib/permissions";
 import PermissionGate from "@/components/PermissionGate";
-import { fetchDrawingSets, createDrawingSet } from "@/lib/drawingSets";
 
 const M = "'IBM Plex Mono', monospace";
 const F = "'Inter', -apple-system, sans-serif";
@@ -93,9 +91,6 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
   const [editProjData, setEditProjData] = useState({ name: p.name, subtitle: p.subtitle || "", location: p.location || "", icon: p.icon, color: p.color, locLabel: p.locLabel, subLabel: p.subLabel });
   const [showDeleteProject, setShowDeleteProject] = useState(false);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
-  const [drawingSets, setDrawingSets] = useState([]);
-  const loadDrawingSets = useCallback(async () => { try { const ds = await fetchDrawingSets(p.id); setDrawingSets(ds); } catch (e) { console.error(e); } }, [p.id]);
-  useEffect(() => { loadDrawingSets(); }, [loadDrawingSets]);
   const [invEmail, setInvEmail] = useState("");
   const [invName, setInvName] = useState("");
   const [invCompany, setInvCompany] = useState("");
@@ -238,7 +233,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
   const delT = (id) => { onDeleteTask(id); if (eT?.id === id) { setShowE(false); setET(null); } setDeleteConfirm(null); };
   const confirmDel = (task) => { const children = childMap[task.id] || []; setDeleteConfirm({ taskId: task.id, title: task.title, hasChildren: children.length > 0, childCount: children.length }); };
   const startAddSub = (taskId) => { const parent = p.tasks.find((t) => t.id === taskId); setNT({ ...emp, loc: parent?.loc || "", sub: parent?.sub || "", priority: "medium" }); setAddSubForBoard(taskId); };
-  const onDr = (s) => { if (drag) { onUpdateTask(drag.id, { status: s }); setDrag(null); } };
+  const onDr = (field, value) => { if (drag) { onUpdateTask(drag.id, { [field]: value }); setDrag(null); } };
 
   const loadAllUsers = async () => { const { data } = await supabase.from("profiles").select("*"); setAllUsers(data || []); };
   const addMemberFromList = async (uid) => {
@@ -351,7 +346,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         {canDo(ACTIONS.EDIT_PROJECT)&&<button onClick={()=>{setEditProjData({name:p.name,subtitle:p.subtitle||"",location:p.location||"",icon:p.icon,color:p.color,locLabel:p.locLabel,subLabel:p.subLabel});setShowEditProject(true);}} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✎ Edit</button>}
         <button onClick={()=>{setShowSettings(true);setSTab("team");loadAllUsers();}} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>⚙ Settings</button>
         {canDo(ACTIONS.EDIT_MEETING_NOTES)&&<button onClick={()=>setShowM(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✦ Scrub Notes</button>}
-        {canDo(ACTIONS.EDIT_PROJECT)&&<button onClick={async()=>{try{await createDrawingSet({projectId:p.id,name:"Drawing Set",createdBy:userId});await loadDrawingSets();}catch(e){alert("Failed to create drawing set: "+e.message);console.error(e);}}} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✦ New Drawing Set</button>}
+
         {canDo(ACTIONS.CREATE_TASK)&&<button onClick={()=>setShowC(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>+ New Task</button>}
       </div>
     </div>
@@ -388,7 +383,6 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
     <div style={{flex:1,overflowY:"auto",overflowX:"hidden",paddingTop:4}}>
 
     {/* Drawing Sets */}
-    {drawingSets.length>0&&<div style={{marginBottom:16}}>{drawingSets.map((ds)=><DrawingSet key={ds.id} drawingSet={ds} currentPhase={p.current_phase||"SD"} role={permRole} userId={userId} onUpdate={loadDrawingSets} theme={T} />)}</div>}
 
     {vw==="board"&&<>
       <div style={{display:"flex",gap:6,marginBottom:8,alignItems:"center",flexWrap:"wrap"}}>
@@ -400,7 +394,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
       </div>
       {boardGroup==="status"&&<div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,overflowX:"auto"}}>
       {Object.entries(STA).map(([status,cfg])=>{const col=sortByBoard(fil.filter((t)=>t.status===status));return(
-        <div key={status} onDragOver={(e)=>e.preventDefault()} onDrop={()=>onDr(status)} style={{background:T.bgCard,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderRadius:10,border:`1px solid ${T.border}`,minHeight:360}}>
+        <div key={status} onDragOver={(e)=>e.preventDefault()} onDrop={()=>onDr("status",status)} style={{background:T.bgCard,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderRadius:10,border:`1px solid ${T.border}`,minHeight:360}}>
           <div style={{padding:"12px 14px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:8,height:8,borderRadius:"50%",background:cfg.color}} /><span style={{fontSize:12,fontWeight:600}}>{cfg.label}</span></div>
             <span style={{background:T.border,borderRadius:8,padding:"1px 6px",fontSize:11,color:T.textSecondary,fontFamily:M}}>{col.length}</span>
@@ -430,7 +424,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
       </div>}
       {boardGroup==="priority"&&<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,overflowX:"auto"}}>
       {Object.entries(PRI).map(([priority,cfg])=>{const col=sortByBoard(fil.filter((t)=>t.priority===priority));return(
-        <div key={priority} style={{background:T.bgCard,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderRadius:10,border:`1px solid ${T.border}`,minHeight:360}}>
+        <div key={priority} onDragOver={(e)=>e.preventDefault()} onDrop={()=>onDr("priority",priority)} style={{background:T.bgCard,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderRadius:10,border:`1px solid ${T.border}`,minHeight:360}}>
           <div style={{padding:"12px 14px",borderBottom:`2px solid ${cfg.color}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:8,height:8,borderRadius:"50%",background:cfg.color}} /><span style={{fontSize:12,fontWeight:600,color:cfg.color}}>{cfg.label}</span></div>
             <span style={{background:T.border,borderRadius:8,padding:"1px 6px",fontSize:11,color:T.textSecondary,fontFamily:M}}>{col.length}</span>
@@ -462,7 +456,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         const assignees=[...tm,{id:null,name:"Unassigned",color:T.textDim}];
         return <div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(assignees.length,6)},1fr)`,gap:12,overflowX:"auto"}}>
         {assignees.map((asn)=>{const col=sortByBoard(fil.filter((t)=>asn.id?t.assignee===asn.id:!t.assignee));if(col.length===0&&asn.id)return null;return(
-          <div key={asn.id||"un"} style={{background:T.bgCard,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderRadius:10,border:`1px solid ${T.border}`,minHeight:360}}>
+          <div key={asn.id||"un"} onDragOver={(e)=>e.preventDefault()} onDrop={()=>onDr("assignee",asn.id||null)} style={{background:T.bgCard,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderRadius:10,border:`1px solid ${T.border}`,minHeight:360}}>
             <div style={{padding:"12px 14px",borderBottom:`1px solid ${T.border}`,display:"flex",alignItems:"center",gap:8}}>
               <div style={{width:24,height:24,borderRadius:"50%",background:asn.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:700,color:"white"}}>{av(asn.name)}</div>
               <span style={{fontSize:12,fontWeight:600,flex:1}}>{asn.name}</span>
@@ -470,7 +464,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
             </div>
             <div style={{padding:8,display:"flex",flexDirection:"column",gap:6}}>
               {col.map((task)=>{const loc=p.locs.find((l)=>l.id===task.loc),pr=PRI[task.priority],sta=STA[task.status],sub=task.sub?allSubs.find((s)=>s.id===task.sub):null;const children=childMap[task.id]||[];const isDS=task.task_type==="drawing_set";
-              return(<div key={task.id} onClick={()=>setExpandCard(task.id)} style={{background:isDS?`${DS_CORAL}08`:T.bgElevated,border:`1px solid ${isDS?DS_CORAL+"44":T.border}`,borderLeft:`3px solid ${isDS?DS_CORAL:pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
+              return(<div key={task.id} draggable onDragStart={()=>setDrag(task)} onDragEnd={()=>setDrag(null)} onClick={()=>setExpandCard(task.id)} style={{background:isDS?`${DS_CORAL}08`:T.bgElevated,border:`1px solid ${isDS?DS_CORAL+"44":T.border}`,borderLeft:`3px solid ${isDS?DS_CORAL:pr.color}`,borderRadius:"0 6px 6px 0",padding:"10px 12px",cursor:"pointer",opacity:task.status==="resolved"?0.5:1}}>
                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                   <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{isDS&&<Tg bg={DS_CORAL+"22"} fg={DS_CORAL}>Drawing Set</Tg>}{loc&&<Tg bg={loc.color} fg="white">{task.loc}</Tg>}{sub&&<Tg bg={T.borderSubtle} fg={T.textSecondary}>{sub.id}</Tg>}<Tg bg={sta.bg} fg={sta.color}>{sta.label}</Tg><Tg bg={pr.bg} fg={pr.color}>{pr.label}</Tg><CatTags cat={task.category}/></div>
                   <div style={{display:"flex",gap:3}}>{canDo(ACTIONS.CREATE_TASK)&&<button onClick={(e)=>{e.stopPropagation();startAddSub(task.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10}} title="Add sub-task">+</button>}<button onClick={(e)=>{e.stopPropagation();opnE(task);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,fontSize:10,display:canDo(ACTIONS.EDIT_TASK,{isOwner:task.assignee===userId})?"inline":"none"}} title="Edit">✎</button>{canDo(ACTIONS.DELETE_TASK)&&<button onClick={(e)=>{e.stopPropagation();confirmDel(task);}} style={{background:"none",border:"none",cursor:"pointer",color:"#E03E3E",fontSize:11,opacity:0.6}} title="Delete">🗑</button>}</div>
