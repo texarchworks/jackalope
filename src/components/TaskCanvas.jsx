@@ -122,6 +122,7 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
     const tasksByLoc = {}, tasksBySub = {}, childTasks = {}, rootTasks = [];
     p.tasks.forEach((t) => {
       if (t.parent_task_id) { if (!childTasks[t.parent_task_id]) childTasks[t.parent_task_id] = []; childTasks[t.parent_task_id].push(t); }
+      else if (t.task_type === "drawing_set") { rootTasks.push(t); }
       else if (t.sub) { if (!tasksBySub[t.sub]) tasksBySub[t.sub] = []; tasksBySub[t.sub].push(t); }
       else if (t.loc) { if (!tasksByLoc[t.loc]) tasksByLoc[t.loc] = []; tasksByLoc[t.loc].push(t); }
       else { rootTasks.push(t); }
@@ -217,12 +218,29 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
       y = Math.max(y, childY) + ROW_GAP;
     });
 
-    if (tree.rootTasks.length > 0) {
+    // Drawing sets render as top-level nodes (same column as locations)
+    const dsTasks = tree.rootTasks.filter(t => t.task_type === "drawing_set");
+    const unassignedTasks = tree.rootTasks.filter(t => t.task_type !== "drawing_set");
+
+    dsTasks.forEach((task) => {
+      const dsId = `ds-${task.id}`;
+      const tColor = task.status === "resolved" ? "#0F7B6C44" : DS_CORAL;
+      const isExp = isLocked(task.id);
+      const allChildren = tree.childTasks[task.id] || [];
+      const checkItems = allChildren.filter(c => c.task_type === "checklist_item");
+      const dsExtraH = checkItems.length > 0 ? Math.min(checkItems.length, 3) * 14 + 30 : 0;
+      const baseH = TASK_H + dsExtraH;
+      pos[task.id] = { x: col0, y, w: TASK_W, h: baseH, type: "task", data: task, expanded: isExp };
+      const { stEnd, effectiveTaskH } = placeTaskSubs(task, col0, y, col0 + TASK_W + COL_GAP);
+      y = Math.max(y + effectiveTaskH + ROW_GAP, stEnd) + ROW_GAP;
+    });
+
+    if (unassignedTasks.length > 0) {
       const unId = "loc-unassigned";
       pos[unId] = { x: col0, y, w: LOC_W, h: LOC_H, type: "location", data: { id: "—", name: "Unassigned", color: "#CA8A04", accent: "#CA8A04" } };
       if (!collapsed[unId]) {
         let tY = y;
-        tree.rootTasks.forEach((task) => {
+        unassignedTasks.forEach((task) => {
           const tColor = task.status === "resolved" ? "#0F7B6C44" : (PRI[task.priority]?.color || "#CA8A04");
           const isExp = isLocked(task.id);
           pos[task.id] = { x: col2Direct, y: tY, w: TASK_W, h: TASK_H, type: "task", data: task, expanded: isExp };

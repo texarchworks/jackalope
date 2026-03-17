@@ -579,7 +579,8 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
             </div>
           </td>
         </tr>
-        {!collapsedRows[task.id]&&children.map((ch)=>{const cLoc=p.locs.find((l)=>l.id===ch.loc),cA=tm.find((m)=>m.id===ch.assignee),cPr=PRI[ch.priority],cSta=STA[ch.status],cSub=ch.sub?allSubs.find((x)=>x.id===ch.sub):null;
+        {isDS&&!collapsedRows[task.id]&&<tr key={`ds-${task.id}`}><td colSpan={9} style={{padding:"0 12px 8px 40px",background:`${DS_CORAL}06`,borderBottom:`1px solid ${T.borderSubtle}`}}><DSChecklist taskId={task.id}/></td></tr>}
+        {!collapsedRows[task.id]&&(isDS?children.filter(c=>c.task_type!=="checklist_item"):children).map((ch)=>{const cLoc=p.locs.find((l)=>l.id===ch.loc),cA=tm.find((m)=>m.id===ch.assignee),cPr=PRI[ch.priority],cSta=STA[ch.status],cSub=ch.sub?allSubs.find((x)=>x.id===ch.sub):null;
         return(<tr key={ch.id} style={{borderBottom:`1px solid ${T.borderSubtle}`,cursor:"pointer",background:T.bgSubRow,opacity:ch.status==="resolved"?0.5:1}} onClick={()=>setExpandCard(ch.id)} onMouseEnter={(e)=>{e.currentTarget.style.background=T.bgHover;e.currentTarget.style.opacity="1";}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgSubRow;e.currentTarget.style.opacity=ch.status==="resolved"?"0.5":"1";}}>
           <td style={{padding:"6px 12px 6px 24px"}}>{cLoc?<span style={{padding:"1px 6px",borderRadius:3,fontSize:10,fontWeight:600,background:cLoc.color,color:"white"}}>{ch.loc}</span>:"—"}</td>
           <td style={{padding:"6px 12px"}}>{cSub?<span style={{fontSize:9,color:T.text,background:T.borderSubtle,padding:"1px 4px",borderRadius:3}}>{cSub.id}</span>:"—"}</td>
