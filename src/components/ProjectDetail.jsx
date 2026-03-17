@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS, PHASE_CONFIG } from "@/lib/constants";
+import { PRIORITIES as PRI, STATUSES as STA, TEAM_COLORS, PHASE_CONFIG, FEATURES, ENTITY_TYPE_CONFIG } from "@/lib/constants";
 import { makeAvatar as av } from "@/lib/helpers";
 import TaskCanvas from "@/components/TaskCanvas";
 import DrawingSet from "@/components/DrawingSet";
@@ -9,6 +9,10 @@ import usePermissions from "@/hooks/usePermissions";
 import { ACTIONS } from "@/lib/permissions";
 import PermissionGate from "@/components/PermissionGate";
 import { fetchDrawingSets, createDrawingSet } from "@/lib/drawingSets";
+import { fetchEntities, buildEntityTree, createEntity as createEntityApi, createProjectLevelDrawingSet } from "@/lib/entities";
+import EntityCard from "@/components/EntityCard";
+import EntityRow from "@/components/EntityRow";
+import DrawingSetPanel from "@/components/DrawingSetPanel";
 
 const M = "'IBM Plex Mono', monospace";
 const F = "'Inter', -apple-system, sans-serif";
@@ -29,7 +33,7 @@ function Modal({ onClose, title, children, wide }) {
     </div></div>);
 }
 
-function TaskForm({ task, onChange, onSubmit, btnLabel, team, locs, subs, cats, locLabel, subLabel, isPM }) {
+function TaskForm({ task, onChange, onSubmit, btnLabel, team, locs, subs, cats, locLabel, subLabel, isPM, entities = [] }) {
   const ls = subs[task.loc] || [];
   const statusEntries = Object.entries(STA).filter(([k]) => isPM || k !== "resolved");
   const selCats = (task.category || "").split(",").filter(Boolean);
@@ -39,11 +43,19 @@ function TaskForm({ task, onChange, onSubmit, btnLabel, team, locs, subs, cats, 
   };
   return (<div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
     <div><label style={lb}>Task Title</label><input value={task.title} onChange={(e) => onChange({ ...task, title: e.target.value })} placeholder="Describe the open item…" style={{ ...ins, width: "100%" }} /></div>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-      <div><label style={lb}>{locLabel}</label><select value={task.loc} onChange={(e) => onChange({ ...task, loc: e.target.value, sub: "" })} style={{ ...sl, width: "100%" }}><option value="">— None —</option>{locs.map((l) => <option key={l.id} value={l.id}>{l.id}: {l.name}</option>)}</select></div>
-      <div><label style={lb}>{subLabel}</label><select value={task.sub || ""} onChange={(e) => onChange({ ...task, sub: e.target.value })} style={{ ...sl, width: "100%" }}><option value="">— None —</option>{ls.map((s) => <option key={s.id} value={s.id}>{s.id}: {s.name}</option>)}</select></div>
-      <div><label style={lb}>Priority</label><select value={task.priority} onChange={(e) => onChange({ ...task, priority: e.target.value })} style={{ ...sl, width: "100%" }}>{Object.entries(PRI).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></div>
-    </div>
+    {FEATURES.ENTITIES_V2 && entities.length > 0 ? (
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+        <div><label style={lb}>Building / Zone</label><select value={task.entity_id || ""} onChange={(e) => onChange({ ...task, entity_id: e.target.value || null })} style={{ ...sl, width: "100%" }}><option value="">— None (Project Level) —</option>{(() => { const tree = buildEntityTree(entities); const opts = []; const render = (nodes, depth = 0) => { nodes.forEach(n => { const cfg = ENTITY_TYPE_CONFIG[n.entity_type]; opts.push(<option key={n.id} value={n.id}>{"\u00A0\u00A0\u00A0\u00A0".repeat(depth)}{cfg?.label || n.entity_type}: {n.name}</option>); if (n.children) render(n.children, depth + 1); }); }; render(tree); return opts; })()}</select></div>
+        <div><label style={lb}>{subLabel}</label><select value={task.sub || ""} onChange={(e) => onChange({ ...task, sub: e.target.value })} style={{ ...sl, width: "100%" }}><option value="">— None —</option>{ls.map((s) => <option key={s.id} value={s.id}>{s.id}: {s.name}</option>)}</select></div>
+        <div><label style={lb}>Priority</label><select value={task.priority} onChange={(e) => onChange({ ...task, priority: e.target.value })} style={{ ...sl, width: "100%" }}>{Object.entries(PRI).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></div>
+      </div>
+    ) : (
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+        <div><label style={lb}>{locLabel}</label><select value={task.loc} onChange={(e) => onChange({ ...task, loc: e.target.value, sub: "" })} style={{ ...sl, width: "100%" }}><option value="">— None —</option>{locs.map((l) => <option key={l.id} value={l.id}>{l.id}: {l.name}</option>)}</select></div>
+        <div><label style={lb}>{subLabel}</label><select value={task.sub || ""} onChange={(e) => onChange({ ...task, sub: e.target.value })} style={{ ...sl, width: "100%" }}><option value="">— None —</option>{ls.map((s) => <option key={s.id} value={s.id}>{s.id}: {s.name}</option>)}</select></div>
+        <div><label style={lb}>Priority</label><select value={task.priority} onChange={(e) => onChange({ ...task, priority: e.target.value })} style={{ ...sl, width: "100%" }}>{Object.entries(PRI).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></div>
+      </div>
+    )}
     <div><label style={lb}>Categories</label>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {cats.map((c) => <button key={c} type="button" onClick={() => toggleCat(c)} style={{ padding: "4px 10px", borderRadius: 4, border: `1px solid ${selCats.includes(c) ? "var(--t-text, #FFF)" : "var(--t-border, #333)"}`, background: selCats.includes(c) ? "var(--t-elevated, #252525)" : "var(--t-elevated, #252525)", color: selCats.includes(c) ? "var(--t-text, #FFF)" : "var(--t-muted, #888)", fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all .15s" }}>{c}</button>)}
@@ -80,7 +92,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
   const [notes, setNotes] = useState("");
   const [ext, setExt] = useState([]);
   const [showX, setShowX] = useState(false);
-  const emp = { title: "", loc: p.locs[0]?.id || "", sub: "", priority: "medium", status: "open", assignee: null, category: p.cats[0] || "", dueDate: "", notes: "", source: "manual" };
+  const emp = { title: "", loc: p.locs[0]?.id || "", sub: "", priority: "medium", status: "open", assignee: null, category: p.cats[0] || "", dueDate: "", notes: "", source: "manual", entity_id: null };
   const [nT, setNT] = useState(emp);
   const [showSettings, setShowSettings] = useState(false);
   const [sTab, setSTab] = useState("team");
@@ -91,6 +103,16 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
   const [drawingSets, setDrawingSets] = useState([]);
   const loadDrawingSets = useCallback(async () => { try { const ds = await fetchDrawingSets(p.id); setDrawingSets(ds); } catch (e) { console.error(e); } }, [p.id]);
   useEffect(() => { loadDrawingSets(); }, [loadDrawingSets]);
+  const [entities, setEntities] = useState([]);
+  const [showAddEntity, setShowAddEntity] = useState(false);
+  const [newEntityName, setNewEntityName] = useState("");
+  const [newEntityType, setNewEntityType] = useState("building");
+  const [expandedEntities, setExpandedEntities] = useState({});
+  const [projectDrawingSet, setProjectDrawingSet] = useState(false);
+  const loadEntities = useCallback(async () => { if (!FEATURES.ENTITIES_V2) return; try { const ents = await fetchEntities(p.id); setEntities(ents); } catch (e) { console.error(e); } }, [p.id]);
+  useEffect(() => { loadEntities(); }, [loadEntities]);
+  const addEntity = async () => { if (!newEntityName.trim()) return; try { await createEntityApi({ projectId: p.id, name: newEntityName.trim(), entityType: newEntityType, createdBy: userId }); setNewEntityName(""); setNewEntityType("building"); setShowAddEntity(false); await loadEntities(); } catch (e) { alert("Failed to create entity: " + e.message); } };
+  const handleCreateProjectDrawingSet = async () => { try { await createProjectLevelDrawingSet(p.id); setProjectDrawingSet(true); } catch (e) { alert("Failed: " + e.message); } };
   const [invEmail, setInvEmail] = useState("");
   const [invName, setInvName] = useState("");
   const [invCompany, setInvCompany] = useState("");
@@ -306,6 +328,8 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         <button onClick={()=>{setShowSettings(true);setSTab("team");loadAllUsers();}} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>⚙ Settings</button>
         {canDo(ACTIONS.EDIT_MEETING_NOTES)&&<button onClick={()=>setShowM(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✦ Scrub Notes</button>}
         {canDo(ACTIONS.EDIT_PROJECT)&&<button onClick={async()=>{try{await createDrawingSet({projectId:p.id,name:"Drawing Set",createdBy:userId});await loadDrawingSets();}catch(e){alert("Failed to create drawing set: "+e.message);console.error(e);}}} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✦ New Drawing Set</button>}
+        {FEATURES.ENTITIES_V2&&canDo(ACTIONS.EDIT_PROJECT)&&<button onClick={()=>setShowAddEntity(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>+ Add Building / Zone</button>}
+        {FEATURES.ENTITIES_V2&&entities.length===0&&canDo(ACTIONS.EDIT_PROJECT)&&!projectDrawingSet&&<button onClick={handleCreateProjectDrawingSet} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>✦ Create Drawing Set</button>}
         {canDo(ACTIONS.CREATE_TASK)&&<button onClick={()=>setShowC(true)} style={{...bs,background:T.bgElevated,color:T.textSecondary,border:`1px solid ${T.border}`}} onMouseDown={(e)=>{e.currentTarget.style.background=T.text;e.currentTarget.style.color=T.bg;}} onMouseUp={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}} onMouseLeave={(e)=>{e.currentTarget.style.background=T.bgElevated;e.currentTarget.style.color=T.textSecondary;}}>+ New Task</button>}
       </div>
     </div>
@@ -343,6 +367,22 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
 
     {/* Drawing Sets */}
     {drawingSets.length>0&&<div style={{marginBottom:16}}>{drawingSets.map((ds)=><DrawingSet key={ds.id} drawingSet={ds} currentPhase={p.current_phase||"SD"} role={permRole} userId={userId} onUpdate={loadDrawingSets} theme={T} />)}</div>}
+
+    {/* Entities V2 — Project-level drawing set */}
+    {FEATURES.ENTITIES_V2&&entities.length===0&&projectDrawingSet&&<div style={{marginBottom:16}}><DrawingSetPanel projectId={p.id} entityId={null} currentPhase={p.current_phase||"SD"} role={permRole} userId={userId} onUpdate={loadEntities} theme={T} /></div>}
+
+    {/* Entities V2 — Entity rows for List view */}
+    {FEATURES.ENTITIES_V2&&entities.length>0&&vw==="list"&&<div style={{background:T.bgCard,borderRadius:10,border:`1px solid ${T.border}`,overflow:"hidden",marginBottom:12}}>
+      {entities.map((ent)=><EntityRow key={ent.id} entity={ent} isExpanded={!!expandedEntities[ent.id]} onToggle={()=>setExpandedEntities(prev=>({...prev,[ent.id]:!prev[ent.id]}))} projectId={p.id} role={permRole} userId={userId} onUpdate={loadEntities} theme={T} />)}
+    </div>}
+
+    {/* Entities V2 — Entity cards for Board view */}
+    {FEATURES.ENTITIES_V2&&entities.length>0&&vw==="board"&&<div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(entities.length,4)},1fr)`,gap:12,marginBottom:16}}>
+      {entities.map((ent)=><EntityCard key={ent.id} entity={ent} onClick={()=>setExpandedEntities(prev=>({...prev,[ent.id]:!prev[ent.id]}))} theme={T} />)}
+    </div>}
+    {FEATURES.ENTITIES_V2&&entities.length>0&&vw==="board"&&Object.keys(expandedEntities).some(k=>expandedEntities[k])&&<div style={{marginBottom:16}}>
+      {entities.filter(ent=>expandedEntities[ent.id]).map(ent=><div key={ent.id} style={{marginBottom:8}}><div style={{fontSize:12,fontWeight:600,color:T.text,marginBottom:6}}>{ent.name} — Drawing Set</div><DrawingSetPanel projectId={p.id} entityId={ent.id} currentPhase={ent.effective_phase||p.current_phase||"SD"} role={permRole} userId={userId} onUpdate={loadEntities} theme={T} /></div>)}
+    </div>}
 
     {vw==="board"&&<>
       <div style={{display:"flex",gap:6,marginBottom:8,alignItems:"center",flexWrap:"wrap"}}>
@@ -581,18 +621,19 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
       </div>}
     </div>}
 
+    {/* TODO: Canvas entity rendering — entities_with_progress view is ready */}
     {vw==="canvas"&&<TaskCanvas project={p} onCreateTask={onCreateTask} onUpdateTask={onUpdateTask} onDeleteTask={onDeleteTask} onEditTask={opnE} onReload={onReload} isPM={isPM} permissions={permissions} filters={{priority:fP,status:fS,assignee:fA,subLoc:fSub}} theme={T} />}
 
     </div>{/* END SCROLLABLE CONTENT */}
 
-    {showC&&<Modal onClose={()=>setShowC(false)} title="Create Task"><TaskForm task={nT} onChange={setNT} onSubmit={addT} btnLabel="Create Task" team={tm} locs={p.locs} subs={p.subs} cats={p.cats} locLabel={p.locLabel} subLabel={p.subLabel} isPM={isPM} /></Modal>}
+    {showC&&<Modal onClose={()=>setShowC(false)} title="Create Task"><TaskForm task={nT} onChange={setNT} onSubmit={addT} btnLabel="Create Task" team={tm} locs={p.locs} subs={p.subs} cats={p.cats} locLabel={p.locLabel} subLabel={p.subLabel} isPM={isPM} entities={entities} /></Modal>}
 
     {showE&&eT&&<Modal onClose={()=>{setShowE(false);setET(null);}} title="Edit Task">
       <div style={{marginBottom:14,padding:"8px 12px",background:T.borderSubtle,borderRadius:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <span style={{fontSize:11,color:T.textMuted,fontFamily:M}}>Source: {eT.source||"manual"} · Created: {eT.created}</span>
         <button onClick={()=>delT(eT.id)} style={{...bs,background:"#E03E3E",color:"white",padding:"3px 10px",fontSize:11}}>Delete</button>
       </div>
-      <TaskForm task={eT} onChange={setET} onSubmit={savE} btnLabel="Save Changes" team={tm} locs={p.locs} subs={p.subs} cats={p.cats} locLabel={p.locLabel} subLabel={p.subLabel} isPM={isPM} />
+      <TaskForm task={eT} onChange={setET} onSubmit={savE} btnLabel="Save Changes" team={tm} locs={p.locs} subs={p.subs} cats={p.cats} locLabel={p.locLabel} subLabel={p.subLabel} isPM={isPM} entities={entities} />
     </Modal>}
 
     {showAs&&<Modal onClose={()=>setShowAs(null)} title="Assign Team Member">
@@ -923,5 +964,21 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
         </div>
       </div>
     </div>}
+
+    {/* Add Entity Modal (Entities V2) */}
+    {FEATURES.ENTITIES_V2&&showAddEntity&&<Modal onClose={()=>{setShowAddEntity(false);setNewEntityName("");}} title="Add Building or Zone">
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <div><label style={lb}>Type</label>
+          <div style={{display:"flex",gap:8}}>
+            {Object.entries(ENTITY_TYPE_CONFIG).map(([key,cfg])=>(
+              <button key={key} onClick={()=>setNewEntityType(key)} style={{...bs,flex:1,padding:"10px",background:newEntityType===key?T.text:T.bgElevated,color:newEntityType===key?T.bg:T.textSecondary,border:`1px solid ${newEntityType===key?T.text:T.border}`,fontWeight:600}}>{cfg.label}</button>
+            ))}
+          </div>
+        </div>
+        <div><label style={lb}>Name</label><input value={newEntityName} onChange={(e)=>setNewEntityName(e.target.value)} placeholder={newEntityType==="building"?"e.g. Main Hall":"e.g. North Campus"} style={{...ins,width:"100%"}} onKeyDown={(e)=>{if(e.key==="Enter")addEntity();}} autoFocus /></div>
+        <p style={{fontSize:11,color:T.textMuted,margin:0}}>A drawing set checklist ({newEntityType==="building"?"34 architectural":"12 civil/landscape"} items) will be created automatically.</p>
+        <button onClick={addEntity} disabled={!newEntityName.trim()} style={{...bs,background:newEntityName.trim()?T.text:T.border,color:newEntityName.trim()?T.bg:T.textMuted,width:"100%",padding:"12px",fontWeight:600}}>Create {ENTITY_TYPE_CONFIG[newEntityType]?.label||"Entity"}</button>
+      </div>
+    </Modal>}
   </div>);
 }

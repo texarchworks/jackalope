@@ -205,6 +205,7 @@ export default function AppShell() {
     if (updates.sub !== undefined) dbUpdates.sub_location_code = updates.sub;
     if (updates.canvas_x !== undefined) dbUpdates.canvas_x = updates.canvas_x;
     if (updates.canvas_y !== undefined) dbUpdates.canvas_y = updates.canvas_y;
+    if (updates.entity_id !== undefined) dbUpdates.entity_id = updates.entity_id;
     if (updates.status === "under_review") {
       dbUpdates.submitted_for_review_by = user.id;
       dbUpdates.submitted_for_review_at = new Date().toISOString();
@@ -337,6 +338,7 @@ export default function AppShell() {
         task_type: task.task_type || "task",
         phase: task.phase || null,
         drawing_set_item_id: task.drawing_set_item_id || null,
+        entity_id: task.entity_id || null,
         created_by: user.id,
       })
       .select()

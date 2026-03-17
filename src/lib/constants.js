@@ -1,3 +1,29 @@
+export const FEATURES = {
+  ENTITIES_V2: false, // DO NOT flip to true until testing is complete
+};
+
+export const ENTITY_TYPES = {
+  BUILDING: 'building',
+  ZONE: 'zone',
+};
+
+export const ENTITY_TYPE_CONFIG = {
+  building: {
+    label: 'Building',
+    icon: 'Building2',
+    color: 'blue',
+    hasDrawingSet: true,
+    drawingSetType: 'architectural',
+  },
+  zone: {
+    label: 'Zone',
+    icon: 'Map',
+    color: 'coral',
+    hasDrawingSet: true,
+    drawingSetType: 'civil',
+  },
+};
+
 // ROYGBIV semantic colors - same in both themes
 export const COLORS = {
   red: "#E03E3E",
