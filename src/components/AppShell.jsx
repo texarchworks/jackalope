@@ -205,7 +205,7 @@ export default function AppShell() {
     if (updates.sub !== undefined) dbUpdates.sub_location_code = updates.sub;
     if (updates.canvas_x !== undefined) dbUpdates.canvas_x = updates.canvas_x;
     if (updates.canvas_y !== undefined) dbUpdates.canvas_y = updates.canvas_y;
-    if (updates.status === "under_review") {
+    if (updates.status === "internal_review" || updates.status === "external_review") {
       dbUpdates.submitted_for_review_by = user.id;
       dbUpdates.submitted_for_review_at = new Date().toISOString();
     }
@@ -275,8 +275,8 @@ export default function AppShell() {
           if (children.length > 0 && children.some((c) => c.status !== "resolved")) return proj;
         }
 
-        // Non-PMs cannot skip Under Review to get to Resolved
-        if (updates.status === "resolved" && task.status !== "under_review" && !isUserPM(proj)) return proj;
+        // Non-PMs cannot skip Review to get to Resolved
+        if (updates.status === "resolved" && task.status !== "internal_review" && task.status !== "external_review" && !isUserPM(proj)) return proj;
 
         let newTasks = proj.tasks.map((t) => (t.id === taskId ? { ...t, ...updates } : t));
 
@@ -290,15 +290,16 @@ export default function AppShell() {
           }
         }
 
-        // Auto-submit-for-review parent when all children are under_review or resolved
-        if (updates.status === "under_review" && task.parent_task_id) {
+        // Auto-submit-for-review parent when all children are in review or resolved
+        const isReviewStatus = (s) => s === "internal_review" || s === "external_review";
+        if (isReviewStatus(updates.status) && task.parent_task_id) {
           const siblings = newTasks.filter((t) => t.parent_task_id === task.parent_task_id);
-          const allReviewOrDone = siblings.every((s) => s.status === "under_review" || s.status === "resolved");
+          const allReviewOrDone = siblings.every((s) => isReviewStatus(s.status) || s.status === "resolved");
           if (allReviewOrDone) {
             const parent = newTasks.find((t) => t.id === task.parent_task_id);
-            if (parent && parent.status !== "under_review" && parent.status !== "resolved") {
-              newTasks = newTasks.map((t) => t.id === task.parent_task_id ? { ...t, status: "under_review" } : t);
-              updateTaskInDb(task.parent_task_id, { status: "under_review" });
+            if (parent && !isReviewStatus(parent.status) && parent.status !== "resolved") {
+              newTasks = newTasks.map((t) => t.id === task.parent_task_id ? { ...t, status: "internal_review" } : t);
+              updateTaskInDb(task.parent_task_id, { status: "internal_review" });
             }
           }
         }
