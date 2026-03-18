@@ -522,7 +522,7 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
             const task = p.tasks.find((t) => t.id === tagMenu.taskId);
             const children = tree.childTasks[tagMenu.taskId] || [];
             const hasUnresolvedChildren = children.length > 0 && children.some((c) => c.status !== "resolved");
-            const isUnderReview = task?.status === "under_review";
+            const isUnderReview = task?.status === "internal_review" || task?.status === "external_review";
             return Object.entries(STA).map(([key, cfg]) => {
               let blocked = false, reason = "";
               if (key === "resolved" && hasUnresolvedChildren) { blocked = true; reason = "sub-tasks open"; }

@@ -26,7 +26,8 @@ export const PRIORITIES = {
 export const STATUSES = {
   open: { label: "Open", color: COLORS.red, bg: "rgba(224,62,62,.12)" },
   in_progress: { label: "In Progress", color: COLORS.blue, bg: "rgba(47,128,237,.12)" },
-  review: { label: "Under Review", color: COLORS.indigo, bg: "rgba(105,64,165,.12)" },
+  internal_review: { label: "Internal Review", color: COLORS.indigo, bg: "rgba(105,64,165,.12)" },
+  external_review: { label: "External Review", color: COLORS.orange, bg: "rgba(217,115,13,.12)" },
   resolved: { label: "Resolved", color: COLORS.green, bg: "rgba(15,123,108,.12)" },
   blocked: { label: "Blocked", color: COLORS.gray, bg: "rgba(136,136,136,.12)" },
 };
