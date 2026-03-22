@@ -258,7 +258,7 @@ export default function ProjectDetail({ project: p, userId, isPM, permissions = 
     if (!newSubCode.trim() || !newSubName.trim()) return;
     const { data: loc } = await supabase.from("zones").select("id").eq("project_id", p.id).eq("code", locCode).single();
     if (!loc) return;
-    await supabase.from("buildings").insert({ location_id: loc.id, code: newSubCode.trim(), name: newSubName.trim(), sort_order: (p.subs[locCode] || []).length });
+    await supabase.from("buildings").insert({ zone_id: loc.id, code: newSubCode.trim(), name: newSubName.trim(), sort_order: (p.subs[locCode] || []).length });
     setNewSubCode(""); setNewSubName(""); setAddSubFor(null); onReload();
   };
   const removeSubLocation = async (subCode) => {

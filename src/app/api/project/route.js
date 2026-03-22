@@ -32,21 +32,17 @@ export async function POST(req) {
       }
     }
 
-    // 2. Get locations to find sub_locations by location_id
-    const { data: locations } = await admin.from("locations").select("id").eq("project_id", projectId);
-    if (locations && locations.length > 0) {
-      const locIds = locations.map((l) => l.id);
-      // Try deleting sub_locations by location_id
-      const { error: subLocErr1 } = await admin.from("sub_locations").delete().in("location_id", locIds);
-      if (subLocErr1) errors.push("sub_locations(by loc): " + subLocErr1.message);
+    // 2. Get zones to find buildings by zone_id
+    const { data: zones } = await admin.from("zones").select("id").eq("project_id", projectId);
+    if (zones && zones.length > 0) {
+      const zoneIds = zones.map((l) => l.id);
+      const { error: bldgErr } = await admin.from("buildings").delete().in("zone_id", zoneIds);
+      if (bldgErr) errors.push("buildings: " + bldgErr.message);
     }
-    // Also try by project_id in case that column exists
-    const { error: subLocErr2 } = await admin.from("sub_locations").delete().eq("project_id", projectId);
-    if (subLocErr2 && !subLocErr2.message.includes("column")) errors.push("sub_locations(by proj): " + subLocErr2.message);
 
-    // 3. Delete locations
-    const { error: locErr } = await admin.from("locations").delete().eq("project_id", projectId);
-    if (locErr) errors.push("locations: " + locErr.message);
+    // 3. Delete zones
+    const { error: zoneErr } = await admin.from("zones").delete().eq("project_id", projectId);
+    if (zoneErr) errors.push("zones: " + zoneErr.message);
 
     // 4. Delete categories
     const { error: catErr } = await admin.from("categories").delete().eq("project_id", projectId);
