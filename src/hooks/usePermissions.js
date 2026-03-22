@@ -51,7 +51,6 @@ export default function usePermissions({ projectId, organizationId } = {}) {
           .select("org_role")
           .eq("org_id", resolvedOrgId)
           .eq("user_id", user.id)
-          .neq("is_active", false)
           .single();
         if (!cancelled) setOrgRole(om?.org_role || null);
       }
