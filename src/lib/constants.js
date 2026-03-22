@@ -24,12 +24,31 @@ export const PRIORITIES = {
 };
 
 export const STATUSES = {
-  open: { label: "Open", color: COLORS.red, bg: "rgba(224,62,62,.12)" },
+  not_started: { label: "Not Started", color: COLORS.red, bg: "rgba(224,62,62,.12)" },
   in_progress: { label: "In Progress", color: COLORS.blue, bg: "rgba(47,128,237,.12)" },
-  internal_review: { label: "Internal Review", color: COLORS.indigo, bg: "rgba(105,64,165,.12)" },
-  external_review: { label: "External Review", color: COLORS.orange, bg: "rgba(217,115,13,.12)" },
-  resolved: { label: "Resolved", color: COLORS.green, bg: "rgba(15,123,108,.12)" },
-  blocked: { label: "Blocked", color: COLORS.gray, bg: "rgba(136,136,136,.12)" },
+  phase_ready: { label: "Phase Ready", color: COLORS.green, bg: "rgba(15,123,108,.12)" },
+};
+
+export const DISCIPLINES = {
+  architectural: { label: "Architectural", color: COLORS.blue, bg: "rgba(47,128,237,.12)" },
+  structural: { label: "Structural", color: COLORS.red, bg: "rgba(224,62,62,.12)" },
+  mep: { label: "MEP", color: COLORS.orange, bg: "rgba(217,115,13,.12)" },
+  civil: { label: "Civil", color: COLORS.green, bg: "rgba(15,123,108,.12)" },
+  landscape: { label: "Landscape", color: COLORS.yellow, bg: "rgba(223,171,1,.12)" },
+  interior: { label: "Interior", color: COLORS.indigo, bg: "rgba(105,64,165,.12)" },
+};
+
+export const DECISION_TYPES = {
+  client_approval: { label: "Client Approval" },
+  agency_review: { label: "Agency Review" },
+  internal_direction: { label: "Internal Direction" },
+  scope_change: { label: "Scope Change" },
+};
+
+export const ACTIVITY_TYPES = {
+  action: { label: "Action" },
+  log: { label: "Log" },
+  exchange: { label: "Exchange" },
 };
 
 export const TEAM_COLORS = [

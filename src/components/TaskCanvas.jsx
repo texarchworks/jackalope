@@ -88,13 +88,13 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
   const isLocked = (id) => !!lockedNodes[id];
 
   const toggleCollapse = (id) => setCollapsed((c) => ({ ...c, [id]: !c[id] }));
-  const hasActiveFilter = filters.priority !== "all" || filters.status !== "all" || filters.assignee !== "all" || (filters.subLoc && filters.subLoc !== "all");
+  const hasActiveFilter = filters.priority !== "all" || filters.readiness_state !== "all" || filters.assignee !== "all" || (filters.subLoc && filters.subLoc !== "all");
 
   // Check if a task matches the current filters
   const taskMatchesFilter = (task) => {
     if (!hasActiveFilter) return true;
     if (filters.priority !== "all" && task.priority !== filters.priority) return false;
-    if (filters.status !== "all" && task.status !== filters.status) return false;
+    if (filters.readiness_state !== "all" && task.readiness_state !== filters.readiness_state) return false;
     if (filters.assignee === "un" && task.assignee !== null) return false;
     if (filters.assignee !== "all" && filters.assignee !== "un" && task.assignee !== filters.assignee) return false;
     if (filters.subLoc && filters.subLoc !== "all" && (task.sub || "") !== filters.subLoc) return false;
@@ -105,8 +105,8 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
   const sortTasks = (tasks) => {
     return [...tasks].sort((a, b) => {
       // Resolved always goes to bottom
-      if (a.status === "resolved" && b.status !== "resolved") return 1;
-      if (a.status !== "resolved" && b.status === "resolved") return -1;
+      if (a.readiness_state === "phase_ready" && b.readiness_state !== "phase_ready") return 1;
+      if (a.readiness_state !== "phase_ready" && b.readiness_state === "phase_ready") return -1;
       if (sortBy === "priority") return (priOrder[a.priority] ?? 9) - (priOrder[b.priority] ?? 9);
       if (sortBy === "deadline") {
         if (!a.dueDate && !b.dueDate) return (priOrder[a.priority] ?? 9) - (priOrder[b.priority] ?? 9);
@@ -158,11 +158,11 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
       const effectiveTaskH = isExp ? Math.max(baseTaskH, DETAIL_H_TASK) : baseTaskH;
       let stY = taskY;
       subs.forEach((st) => {
-        const stColor = st.status === "resolved" ? "#0F7B6C44" : (PRI[st.priority]?.color || T.border);
+        const stColor = st.readiness_state === "phase_ready" ? "#0F7B6C44" : (PRI[st.priority]?.color || T.border);
         const isStExp = isLocked(st.id);
         const effectiveStH = isStExp ? Math.max(STASK_H, DETAIL_H_SUB) : STASK_H;
         pos[st.id] = { x: effectiveSubX, y: stY, w: STASK_W, h: STASK_H, type: "subtask", data: st, expanded: isStExp };
-        wires.push({ x1: taskX + TASK_W + (isExp ? DETAIL_W + DETAIL_GAP : 0), y1: taskY + baseTaskH / 2, x2: effectiveSubX, y2: stY + STASK_H / 2, color: stColor, dashed: st.status === "resolved", taskId: st.id });
+        wires.push({ x1: taskX + TASK_W + (isExp ? DETAIL_W + DETAIL_GAP : 0), y1: taskY + baseTaskH / 2, x2: effectiveSubX, y2: stY + STASK_H / 2, color: stColor, dashed: st.readiness_state === "phase_ready", taskId: st.id });
         stY += effectiveStH + ROW_GAP;
       });
       return { stEnd: stY, effectiveTaskH };
@@ -193,13 +193,13 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
         let taskY = subY;
         subTasks.forEach((task) => {
           const tY = Math.max(taskY, subY);
-          const tColor = task.status === "resolved" ? "#0F7B6C44" : (task.task_type === "drawing_set" ? DS_CORAL : (PRI[task.priority]?.color || T.border));
+          const tColor = task.readiness_state === "phase_ready" ? "#0F7B6C44" : (task.task_type === "drawing_set" ? DS_CORAL : (PRI[task.priority]?.color || T.border));
           const isExp = isLocked(task.id);
           const tCheckItems = task.task_type === "drawing_set" ? (tree.childTasks[task.id] || []).filter(c => c.task_type === "checklist_item") : [];
           const tDsExtra = tCheckItems.length > 0 ? Math.min(tCheckItems.length, 3) * 14 + 30 : 0;
           const tH = TASK_H + tDsExtra;
           pos[task.id] = { x: col2Sub, y: tY, w: TASK_W, h: tH, type: "task", data: task, expanded: isExp };
-          wires.push({ x1: col1 + SUB_W, y1: subY + SUB_H / 2, x2: col2Sub, y2: tY + tH / 2, color: tColor, dashed: task.status === "resolved", taskId: task.id });
+          wires.push({ x1: col1 + SUB_W, y1: subY + SUB_H / 2, x2: col2Sub, y2: tY + tH / 2, color: tColor, dashed: task.readiness_state === "phase_ready", taskId: task.id });
           const { stEnd, effectiveTaskH } = placeTaskSubs(task, col2Sub, tY, col3FromSub);
           taskY = Math.max(tY + effectiveTaskH + ROW_GAP, stEnd);
         });
@@ -209,13 +209,13 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
 
       directTasks.forEach((task) => {
         const tY = Math.max(childY, locY);
-        const tColor = task.status === "resolved" ? "#0F7B6C44" : (task.task_type === "drawing_set" ? DS_CORAL : (PRI[task.priority]?.color || loc.color));
+        const tColor = task.readiness_state === "phase_ready" ? "#0F7B6C44" : (task.task_type === "drawing_set" ? DS_CORAL : (PRI[task.priority]?.color || loc.color));
         const isExp = isLocked(task.id);
         const tCheckItems = task.task_type === "drawing_set" ? (tree.childTasks[task.id] || []).filter(c => c.task_type === "checklist_item") : [];
         const tDsExtra = tCheckItems.length > 0 ? Math.min(tCheckItems.length, 3) * 14 + 30 : 0;
         const tH = TASK_H + tDsExtra;
         pos[task.id] = { x: col2Direct, y: tY, w: TASK_W, h: tH, type: "task", data: task, expanded: isExp };
-        wires.push({ x1: col0 + LOC_W, y1: locY + LOC_H / 2, x2: col2Direct, y2: tY + tH / 2, color: tColor, dashed: task.status === "resolved", taskId: task.id });
+        wires.push({ x1: col0 + LOC_W, y1: locY + LOC_H / 2, x2: col2Direct, y2: tY + tH / 2, color: tColor, dashed: task.readiness_state === "phase_ready", taskId: task.id });
         hadChildren = true;
         const { stEnd, effectiveTaskH } = placeTaskSubs(task, col2Direct, tY, col3Direct);
         childY = Math.max(childY, Math.max(tY + effectiveTaskH + ROW_GAP, stEnd));
@@ -230,7 +230,7 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
       if (!collapsed[unId]) {
         let tY = y;
         tree.rootTasks.forEach((task) => {
-          const tColor = task.status === "resolved" ? "#0F7B6C44" : (PRI[task.priority]?.color || "#CA8A04");
+          const tColor = task.readiness_state === "phase_ready" ? "#0F7B6C44" : (PRI[task.priority]?.color || "#CA8A04");
           const isExp = isLocked(task.id);
           pos[task.id] = { x: col2Direct, y: tY, w: TASK_W, h: TASK_H, type: "task", data: task, expanded: isExp };
           wires.push({ x1: col0 + LOC_W, y1: y + LOC_H / 2, x2: col2Direct, y2: tY + TASK_H / 2, color: tColor, dashed: true, taskId: task.id });
@@ -274,19 +274,19 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
 
   const handleAddSubTask = async (parentId, subTask) => {
     const parent = p.tasks.find((t) => t.id === parentId);
-    await onCreateTask({ ...subTask, loc: parent?.loc || "", sub: parent?.sub || "", status: "open", source: "manual", parent_task_id: parentId });
+    await onCreateTask({ ...subTask, loc: parent?.loc || "", sub: parent?.sub || "", readiness_state: "not_started", source: "manual", parent_task_id: parentId });
     setAddSubFor(null);
   };
-  const handleAddTask = async (taskData) => { await onCreateTask({ ...taskData, status: "open", source: "manual" }); setAddTaskFor(null); };
+  const handleAddTask = async (taskData) => { await onCreateTask({ ...taskData, readiness_state: "not_started", source: "manual" }); setAddTaskFor(null); };
   const handleAddSubLoc = async (locCode, subLocData) => {
     const { supabase } = await import("@/lib/supabase");
-    const { data: loc } = await supabase.from("locations").select("id").eq("project_id", p.id).eq("code", locCode).single();
+    const { data: loc } = await supabase.from("zones").select("id").eq("project_id", p.id).eq("code", locCode).single();
     if (!loc) return;
-    await supabase.from("sub_locations").insert({ location_id: loc.id, code: subLocData.code.trim(), name: subLocData.name.trim(), sort_order: (p.subs[locCode] || []).length });
+    await supabase.from("buildings").insert({ zone_id: loc.id, code: subLocData.code.trim(), name: subLocData.name.trim(), sort_order: (p.subs[locCode] || []).length });
     setAddSubLocFor(null);
     if (onReload) onReload();
   };
-  const getProgress = (taskId) => { const ch = tree.childTasks[taskId] || []; if (!ch.length) return null; const rv = ch.filter((c) => c.status === "resolved").length; return { rv, tot: ch.length, pct: Math.round(rv / ch.length * 100) }; };
+  const getProgress = (taskId) => { const ch = tree.childTasks[taskId] || []; if (!ch.length) return null; const rv = ch.filter((c) => c.readiness_state === "phase_ready").length; return { rv, tot: ch.length, pct: Math.round(rv / ch.length * 100) }; };
 
   // Determine opacity for filter dimming
   const getNodeOpacity = (nodeType, data) => {
@@ -354,18 +354,18 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
     }
     if (n.type === "task") {
       const task = n.data; const assignee = tm.find((m) => m.id === task.assignee);
-      const pr = PRI[task.priority]; const sta = STA[task.status]; const progress = getProgress(task.id);
-      const isRes = task.status === "resolved"; const isCritHigh = task.priority === "critical" || task.priority === "high";
+      const pr = PRI[task.priority]; const sta = STA[task.readiness_state]; const progress = getProgress(task.id);
+      const isRes = task.readiness_state === "phase_ready"; const isCritHigh = task.priority === "critical" || task.priority === "high";
       const isDS = task.task_type === "drawing_set";
       const borderColor = isRes ? T.border : (isDS ? DS_CORAL : pr.color);
       const isLocked = n.expanded;
       const isShowDetail = isHov || isLocked;
       const openStatusMenu = (e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagMenu({ taskId: task.id, type: "status", x: r.left, y: r.bottom + 4 }); };
       const openPriorityMenu = (e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagMenu({ taskId: task.id, type: "priority", x: r.left, y: r.bottom + 4 }); };
-      const overdue = task.dueDate && task.dueDate < new Date().toISOString().split("T")[0] && task.status !== "resolved";
+      const overdue = task.dueDate && task.dueDate < new Date().toISOString().split("T")[0] && task.readiness_state !== "phase_ready";
       // Drawing set inline checklist data
       const dsCheckItems = isDS ? (tree.childTasks[task.id] || []).filter(c => c.task_type === "checklist_item") : [];
-      const dsDone = dsCheckItems.filter(c => c.status === "resolved").length;
+      const dsDone = dsCheckItems.filter(c => c.readiness_state === "phase_ready").length;
       const totalW = n.w + (isShowDetail ? DETAIL_W + DETAIL_GAP : 0);
       const nodeH = n.h + (progress ? 10 : 0);
       const detailH = Math.max(nodeH, 120);
@@ -399,7 +399,7 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
               {DRAWING_SET_PHASES.map(({ key, label, color }) => {
                 const items = dsCheckItems.filter(c => c.phase === key);
                 if (items.length === 0) return null;
-                const pDone = items.filter(c => c.status === "resolved").length;
+                const pDone = items.filter(c => c.readiness_state === "phase_ready").length;
                 return <div key={key} style={{ marginBottom: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 3, padding: "1px 0" }}>
                     <span style={{ fontSize: 8, fontWeight: 600, color }}>{key}</span>
@@ -426,14 +426,14 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
     }
     if (n.type === "subtask") {
       const task = n.data; const assignee = tm.find((m) => m.id === task.assignee);
-      const pr = PRI[task.priority]; const sta = STA[task.status];
-      const isRes = task.status === "resolved"; const isCritHigh = task.priority === "critical" || task.priority === "high";
+      const pr = PRI[task.priority]; const sta = STA[task.readiness_state];
+      const isRes = task.readiness_state === "phase_ready"; const isCritHigh = task.priority === "critical" || task.priority === "high";
       const borderColor = isRes ? T.borderSubtle : pr.color;
       const isLocked = n.expanded;
       const isShowDetail = isHov || isLocked;
       const openStatusMenu = (e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagMenu({ taskId: task.id, type: "status", x: r.left, y: r.bottom + 4 }); };
       const openPriorityMenu = (e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagMenu({ taskId: task.id, type: "priority", x: r.left, y: r.bottom + 4 }); };
-      const overdue = task.dueDate && task.dueDate < new Date().toISOString().split("T")[0] && task.status !== "resolved";
+      const overdue = task.dueDate && task.dueDate < new Date().toISOString().split("T")[0] && task.readiness_state !== "phase_ready";
       const totalW = n.w + (isShowDetail ? DETAIL_W + DETAIL_GAP : 0);
       return (<foreignObject key={id} x={n.x} y={n.y} width={totalW + 4} height={Math.max(n.h, isShowDetail ? 100 : n.h)} style={{ overflow: "visible" }}>
         <div onMouseEnter={() => setHoveredNode(id)} onMouseLeave={() => setHoveredNode(null)} style={{ display: "flex", gap: DETAIL_GAP }}>
@@ -521,27 +521,19 @@ export default function TaskCanvas({ project: p, onCreateTask, onUpdateTask, onD
           {tagMenu.type === "status" && (() => {
             const task = p.tasks.find((t) => t.id === tagMenu.taskId);
             const children = tree.childTasks[tagMenu.taskId] || [];
-            const hasUnresolvedChildren = children.length > 0 && children.some((c) => c.status !== "resolved");
-            const isUnderReview = task?.status === "internal_review" || task?.status === "external_review";
             return Object.entries(STA).map(([key, cfg]) => {
               let blocked = false, reason = "";
-              if (key === "resolved" && hasUnresolvedChildren) { blocked = true; reason = "sub-tasks open"; }
-              else if (key === "resolved" && !isPM) { blocked = true; reason = "PM only"; }
-              if (!isPM && key === "resolved") { blocked = true; reason = "PM only"; }
+              if (key === "phase_ready" && !isPM) { blocked = true; reason = "PM only"; }
               return (
                 <button key={key} onClick={() => {
                   if (blocked) return;
-                  if (key === "open" && isUnderReview && isPM) {
-                    onUpdateTask(tagMenu.taskId, { status: "open", _rejected: true });
-                  } else {
-                    onUpdateTask(tagMenu.taskId, { status: key });
-                  }
+                  onUpdateTask(tagMenu.taskId, { readiness_state: key });
                   setTagMenu(null);
                 }}
                   style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "6px 10px", border: "none", borderRadius: 4, cursor: blocked ? "not-allowed" : "pointer", background: "transparent", color: blocked ? T.textDim : T.text, fontFamily: F, fontSize: 12, textAlign: "left", opacity: blocked ? 0.4 : 1 }}
                   onMouseEnter={(e) => { if (!blocked) e.currentTarget.style.background = T.bgElevated; }} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: cfg.color, flexShrink: 0 }} />
-                  <span>{key === "open" && isUnderReview && isPM ? "Reject → Open" : cfg.label}</span>
+                  <span>{cfg.label}</span>
                   {blocked && <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>{reason}</span>}
                 </button>
               );

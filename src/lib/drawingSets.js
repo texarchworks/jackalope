@@ -35,17 +35,17 @@ export async function fetchDrawingSets(projectId) {
       CD: ds.items.filter(i => i.phase === 'CD').sort((a, b) => a.sort_order - b.sort_order),
     },
     totalItems: ds.items.length,
-    completedItems: ds.items.filter(i => i.is_complete).length,
+    completedItems: ds.items.filter(i => i.readiness_state === "phase_ready").length,
   }));
 }
 
-export async function toggleDrawingSetItem(itemId, isComplete, userId) {
+export async function toggleDrawingSetItem(itemId, isReady, userId) {
   const { data, error } = await supabase
     .from('drawing_set_items')
     .update({
-      is_complete: isComplete,
-      completed_at: isComplete ? new Date().toISOString() : null,
-      completed_by: isComplete ? userId : null,
+      readiness_state: isReady ? 'phase_ready' : 'not_started',
+      ready_at: isReady ? new Date().toISOString() : null,
+      ready_by: isReady ? userId : null,
     })
     .eq('id', itemId)
     .select()
