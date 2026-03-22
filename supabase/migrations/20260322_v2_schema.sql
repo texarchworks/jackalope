@@ -6,6 +6,9 @@
 
 BEGIN;
 
+-- Drop view early — depends on tasks.* and blocks column drops later
+DROP VIEW IF EXISTS tasks_with_phase CASCADE;
+
 -- ============================================================
 -- PART 1: NEW ENUMS
 -- ============================================================
@@ -160,7 +163,7 @@ WHERE rejected_by IS NOT NULL;
 -- Drop view first — it depends on tasks.* including status
 -- ============================================================
 
-ALTER TABLE tasks DROP COLUMN status CASCADE;
+ALTER TABLE tasks DROP COLUMN status;
 
 ALTER TABLE tasks
   DROP COLUMN submitted_for_review_by,
