@@ -157,7 +157,10 @@ WHERE rejected_by IS NOT NULL;
 -- ============================================================
 -- PART 3b: DROP DEPRECATED COLUMNS
 -- (data has been migrated — safe to drop)
+-- Drop view first — it depends on tasks.* including status
 -- ============================================================
+
+DROP VIEW IF EXISTS tasks_with_phase;
 
 ALTER TABLE tasks DROP COLUMN status;
 
