@@ -374,6 +374,7 @@ export default function AppShell() {
         color: proj.color || "#2F80ED",
         loc_label: proj.locLabel || "Zone",
         sub_label: proj.subLabel || "Building",
+        organization_id: org?.id || null,
         created_by: user.id,
       })
       .select()
@@ -600,6 +601,7 @@ export default function AppShell() {
             <ProjectDetail
               project={curProj}
               userId={user.id}
+              orgId={org?.id}
               isPM={isUserPM(curProj)}
               permissions={{
                 canCreate: canCreate(curProj),

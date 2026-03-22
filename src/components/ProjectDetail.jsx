@@ -63,8 +63,8 @@ function TaskForm({ task, onChange, onSubmit, btnLabel, team, locs, subs, cats, 
   </div>);
 }
 
-export default function ProjectDetail({ project: p, userId, isPM, permissions = {}, onCreateTask, onUpdateTask, onDeleteTask, onReload, onEditProject, onDeleteProject, theme: T = {} }) {
-  const { role: permRole, canDo } = usePermissions({ projectId: p.id });
+export default function ProjectDetail({ project: p, userId, orgId, isPM, permissions = {}, onCreateTask, onUpdateTask, onDeleteTask, onReload, onEditProject, onDeleteProject, theme: T = {} }) {
+  const { role: permRole, canDo } = usePermissions({ projectId: p.id, organizationId: orgId });
   const allSubs = useMemo(() => Object.values(p.subs).flat(), [p.subs]);
   const tm = p.team || [];
   const [vw, setVw] = useState("board");
