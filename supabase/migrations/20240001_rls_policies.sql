@@ -12,7 +12,6 @@ AS $$
     SELECT 1 FROM org_members
     WHERE org_id = p_org_id
       AND user_id = auth.uid()
-      AND status = 'active'
   );
 $$;
 
@@ -20,10 +19,9 @@ CREATE OR REPLACE FUNCTION auth_org_role(p_org_id uuid)
 RETURNS text
 LANGUAGE sql SECURITY DEFINER STABLE
 AS $$
-  SELECT role FROM org_members
+  SELECT org_role FROM org_members
   WHERE org_id = p_org_id
     AND user_id = auth.uid()
-    AND status = 'active'
   LIMIT 1;
 $$;
 
@@ -63,7 +61,7 @@ CREATE POLICY "profiles_select_org" ON profiles FOR SELECT
       JOIN org_members om2 ON om1.org_id = om2.org_id
       WHERE om1.user_id = auth.uid()
         AND om2.user_id = profiles.id
-        AND om1.status = 'active'
+        AND om1.org_id IS NOT NULL
     )
   );
 
@@ -110,8 +108,7 @@ CREATE POLICY "projects_insert" ON projects FOR INSERT
     EXISTS (
       SELECT 1 FROM org_members
       WHERE user_id = auth.uid()
-        AND role IN ('admin', 'owner', 'pm', 'member')
-        AND status = 'active'
+        AND org_role IN ('admin', 'owner', 'pm', 'member')
     )
   );
 
@@ -136,7 +133,14 @@ CREATE POLICY "project_members_select" ON project_members FOR SELECT
   );
 
 CREATE POLICY "project_members_insert" ON project_members FOR INSERT
-  WITH CHECK (auth_project_role(project_id) IN ('admin', 'pm'));
+  WITH CHECK (
+    auth_project_role(project_id) IN ('admin', 'pm')
+    OR EXISTS (
+      SELECT 1 FROM projects p
+      WHERE p.id = project_id
+        AND p.created_by = auth.uid()
+    )
+  );
 
 CREATE POLICY "project_members_update" ON project_members FOR UPDATE
   USING (auth_project_role(project_id) IN ('admin', 'pm'));
@@ -177,8 +181,7 @@ CREATE POLICY "tasks_delete" ON tasks FOR DELETE
       JOIN org_members om ON om.org_id = p.organization_id
       WHERE p.id = tasks.project_id
         AND om.user_id = auth.uid()
-        AND om.role IN ('admin', 'owner')
-        AND om.status = 'active'
+        AND om.org_role IN ('admin', 'owner')
     )
   );
 

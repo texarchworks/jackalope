@@ -1,11 +1,10 @@
 -- ============================================================
--- Fix RLS helper functions — wrong column names
--- Fix project_members insert policy — chicken-and-egg on create
+-- Fix RLS helper functions + project_members bootstrap
+-- (Corrects column names fixed in 20240001 base migration)
 -- ============================================================
 
--- auth_org_role referenced "role" but actual column is "org_role".
--- Original also filtered on "status = 'active'" but that column
--- does not exist either — drop the filter.
+-- Recreate with correct column names in case base migration
+-- was already applied with the old definitions
 CREATE OR REPLACE FUNCTION auth_org_role(p_org_id uuid)
 RETURNS text
 LANGUAGE sql SECURITY DEFINER STABLE
@@ -16,7 +15,6 @@ AS $$
   LIMIT 1;
 $$;
 
--- auth_is_org_member had same wrong column names
 CREATE OR REPLACE FUNCTION auth_is_org_member(p_org_id uuid)
 RETURNS boolean
 LANGUAGE sql SECURITY DEFINER STABLE
@@ -28,9 +26,7 @@ AS $$
   );
 $$;
 
--- project_members_insert: allow project creator to add the first member
--- Without this, creating a project then inserting yourself as admin fails
--- because auth_project_role returns null (no rows yet).
+-- Allow project creator to bootstrap project_members
 DROP POLICY IF EXISTS "project_members_insert" ON project_members;
 
 CREATE POLICY "project_members_insert" ON project_members FOR INSERT
