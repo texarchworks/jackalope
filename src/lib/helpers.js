@@ -7,8 +7,8 @@ export const makeAvatar = (name) => {
     : name.substring(0, 2).toUpperCase();
 };
 
-export const isOverdue = (dueDate, status) => {
-  if (!dueDate || status === "resolved") return false;
+export const isOverdue = (dueDate, readinessState) => {
+  if (!dueDate || readinessState === "phase_ready") return false;
   return dueDate < new Date().toISOString().split("T")[0];
 };
 

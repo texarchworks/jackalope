@@ -130,14 +130,14 @@ export default function AppShell() {
       projRows.map(async (p) => {
         const [{ data: tasks }, { data: locs }, { data: cats }, { data: members }] = await Promise.all([
           supabase.from("tasks").select("*").eq("project_id", p.id).order("created_at"),
-          supabase.from("locations").select("*, sub_locations(*)").eq("project_id", p.id).order("sort_order"),
+          supabase.from("zones").select("*, buildings(*)").eq("project_id", p.id).order("sort_order"),
           supabase.from("categories").select("*").eq("project_id", p.id).order("sort_order"),
           supabase.from("project_members").select("user_id, role, profiles(*)").eq("project_id", p.id),
         ]);
 
         const subs = {};
         (locs || []).forEach((l) => {
-          subs[l.code] = (l.sub_locations || []).map((s) => ({ id: s.code, name: s.name }));
+          subs[l.code] = (l.buildings || []).map((s) => ({ id: s.code, name: s.name }));
         });
 
         return {
@@ -157,18 +157,16 @@ export default function AppShell() {
             is_external: m.profiles?.is_external || false, company: m.profiles?.company || "",
           })),
           tasks: (tasks || []).map((t) => ({
-            ...t, loc: t.location_code || "", sub: t.sub_location_code || "",
+            ...t, loc: t.zone_code || "", sub: t.building_code || "",
             assignee: t.assignee_id, dueDate: t.due_date || "",
             created: t.created_at?.split("T")[0] || "",
             parent_task_id: t.parent_task_id || null,
             canvas_x: t.canvas_x != null ? t.canvas_x : null,
             canvas_y: t.canvas_y != null ? t.canvas_y : null,
-            submitted_for_review_by: t.submitted_for_review_by || null,
-            submitted_for_review_at: t.submitted_for_review_at?.split("T")[0] || null,
-            resolved_by: t.resolved_by || null,
-            resolved_at: t.resolved_at?.split("T")[0] || null,
-            rejected_by: t.rejected_by || null,
-            rejected_at: t.rejected_at?.split("T")[0] || null,
+            is_blocked: t.is_blocked || false,
+            blocked_reason: t.blocked_reason || null,
+            blocked_by: t.blocked_by || null,
+            discipline: t.discipline || null,
           })),
         };
       })
@@ -194,30 +192,32 @@ export default function AppShell() {
   // ── TASK OPERATIONS ──
   const updateTaskInDb = async (taskId, updates) => {
     const dbUpdates = {};
-    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    if (updates.readiness_state !== undefined) dbUpdates.readiness_state = updates.readiness_state;
     if (updates.title !== undefined) dbUpdates.title = updates.title;
     if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
     if (updates.category !== undefined) dbUpdates.category = updates.category;
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
     if (updates.assignee !== undefined) dbUpdates.assignee_id = updates.assignee;
     if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate || null;
-    if (updates.loc !== undefined) dbUpdates.location_code = updates.loc;
-    if (updates.sub !== undefined) dbUpdates.sub_location_code = updates.sub;
+    if (updates.loc !== undefined) dbUpdates.zone_code = updates.loc;
+    if (updates.sub !== undefined) dbUpdates.building_code = updates.sub;
     if (updates.canvas_x !== undefined) dbUpdates.canvas_x = updates.canvas_x;
     if (updates.canvas_y !== undefined) dbUpdates.canvas_y = updates.canvas_y;
-    if (updates.status === "internal_review" || updates.status === "external_review") {
-      dbUpdates.submitted_for_review_by = user.id;
-      dbUpdates.submitted_for_review_at = new Date().toISOString();
-    }
-    if (updates.status === "resolved") {
-      dbUpdates.resolved_at = new Date().toISOString();
-      dbUpdates.resolved_by = user.id;
-    }
-    if (updates.status === "open" && updates._rejected) {
-      dbUpdates.rejected_by = user.id;
-      dbUpdates.rejected_at = new Date().toISOString();
-    }
+    if (updates.is_blocked !== undefined) dbUpdates.is_blocked = updates.is_blocked;
+    if (updates.blocked_reason !== undefined) dbUpdates.blocked_reason = updates.blocked_reason;
+    if (updates.blocked_by !== undefined) dbUpdates.blocked_by = updates.blocked_by;
+    if (updates.discipline !== undefined) dbUpdates.discipline = updates.discipline;
     await supabase.from("tasks").update(dbUpdates).eq("id", taskId);
+    // Log readiness transitions to activity_log
+    if (updates.readiness_state === "phase_ready") {
+      await supabase.from("activity_log").insert({
+        project_id: updates._projectId,
+        task_id: taskId,
+        activity_type: "action",
+        action_kind: "mark_ready",
+        actor_id: user.id,
+      });
+    }
   };
 
   // ── ROLE & PERMISSION SYSTEM ──
@@ -266,55 +266,17 @@ export default function AppShell() {
         const role = getUserRole(proj);
         if (role === "member" && task.assignee !== user?.id && task.created_by !== user?.id) return proj;
 
-        // Status flow enforcement
-        if (updates.status === "resolved") {
-          // Only PMs can move to Resolved
-          if (!isUserPM(proj)) return proj;
-          // Block resolving parent if children unresolved
-          const children = proj.tasks.filter((t) => t.parent_task_id === taskId);
-          if (children.length > 0 && children.some((c) => c.status !== "resolved")) return proj;
-        }
+        // Only PMs can mark phase_ready
+        if (updates.readiness_state === "phase_ready" && !isUserPM(proj)) return proj;
 
-        // Non-PMs cannot skip Review to get to Resolved
-        if (updates.status === "resolved" && task.status !== "internal_review" && task.status !== "external_review" && !isUserPM(proj)) return proj;
-
-        let newTasks = proj.tasks.map((t) => (t.id === taskId ? { ...t, ...updates } : t));
-
-        // Auto-resolve parent when all children are resolved (only if user is PM)
-        if (updates.status === "resolved" && task.parent_task_id && isUserPM(proj)) {
-          const siblings = newTasks.filter((t) => t.parent_task_id === task.parent_task_id);
-          const allResolved = siblings.every((s) => s.status === "resolved");
-          if (allResolved) {
-            newTasks = newTasks.map((t) => t.id === task.parent_task_id ? { ...t, status: "resolved" } : t);
-            updateTaskInDb(task.parent_task_id, { status: "resolved" });
-          }
-        }
-
-        // Auto-submit-for-review parent when all children are in review or resolved
-        const isReviewStatus = (s) => s === "internal_review" || s === "external_review";
-        if (isReviewStatus(updates.status) && task.parent_task_id) {
-          const siblings = newTasks.filter((t) => t.parent_task_id === task.parent_task_id);
-          const allReviewOrDone = siblings.every((s) => isReviewStatus(s.status) || s.status === "resolved");
-          if (allReviewOrDone) {
-            const parent = newTasks.find((t) => t.id === task.parent_task_id);
-            if (parent && !isReviewStatus(parent.status) && parent.status !== "resolved") {
-              newTasks = newTasks.map((t) => t.id === task.parent_task_id ? { ...t, status: "internal_review" } : t);
-              updateTaskInDb(task.parent_task_id, { status: "internal_review" });
-            }
-          }
-        }
-
+        const newTasks = proj.tasks.map((t) => (t.id === taskId ? { ...t, ...updates } : t));
         return { ...proj, tasks: newTasks };
       });
     });
     // Guard: check before sending to DB
     const proj = projects.find((p) => p.id === projId);
-    if (updates.status === "resolved" && proj) {
-      if (!isUserPM(proj)) return;
-      const children = proj.tasks.filter((t) => t.parent_task_id === taskId);
-      if (children.length > 0 && children.some((c) => c.status !== "resolved")) return;
-    }
-    updateTaskInDb(taskId, updates);
+    if (updates.readiness_state === "phase_ready" && proj && !isUserPM(proj)) return;
+    updateTaskInDb(taskId, { ...updates, _projectId: projId });
   };
 
   const createTask = async (projId, task) => {
@@ -325,10 +287,10 @@ export default function AppShell() {
       .insert({
         project_id: projId,
         title: task.title,
-        location_code: task.loc || "",
-        sub_location_code: task.sub || "",
+        zone_code: task.loc || "",
+        building_code: task.sub || "",
         priority: task.priority,
-        status: task.status || "open",
+        readiness_state: task.readiness_state || "not_started",
         category: task.category || "",
         assignee_id: task.assignee || null,
         due_date: task.dueDate || null,
@@ -337,7 +299,7 @@ export default function AppShell() {
         parent_task_id: task.parent_task_id || null,
         task_type: task.task_type || "task",
         phase: task.phase || null,
-        drawing_set_item_id: task.drawing_set_item_id || null,
+        discipline: task.discipline || null,
         created_by: user.id,
       })
       .select()
@@ -345,11 +307,15 @@ export default function AppShell() {
 
     if (data) {
       const newTask = {
-        ...data, loc: data.location_code, sub: data.sub_location_code,
+        ...data, loc: data.zone_code, sub: data.building_code,
         assignee: data.assignee_id, dueDate: data.due_date || "",
         created: data.created_at?.split("T")[0] || "",
         parent_task_id: data.parent_task_id || null,
         canvas_x: data.canvas_x, canvas_y: data.canvas_y,
+        is_blocked: data.is_blocked || false,
+        blocked_reason: data.blocked_reason || null,
+        blocked_by: data.blocked_by || null,
+        discipline: data.discipline || null,
       };
       // Bulk-create checklist children for drawing_set tasks
       if (data.task_type === "drawing_set" && task._template) {
@@ -359,10 +325,10 @@ export default function AppShell() {
           title: item.name,
           task_type: "checklist_item",
           parent_task_id: data.id,
-          status: "open",
+          readiness_state: "not_started",
           priority: task.priority || "medium",
-          location_code: task.loc || "",
-          sub_location_code: task.sub || "",
+          zone_code: task.loc || "",
+          building_code: task.sub || "",
           phase: item.phase,
           source: "manual",
           category: "",
@@ -370,7 +336,7 @@ export default function AppShell() {
         }));
         const { data: children } = await supabase.from("tasks").insert(childRows).select();
         const newChildren = (children || []).map((c) => ({
-          ...c, loc: c.location_code, sub: c.sub_location_code,
+          ...c, loc: c.zone_code, sub: c.building_code,
           assignee: c.assignee_id, dueDate: c.due_date || "",
           created: c.created_at?.split("T")[0] || "",
           parent_task_id: c.parent_task_id,
@@ -408,6 +374,7 @@ export default function AppShell() {
         color: proj.color || "#2F80ED",
         loc_label: proj.locLabel || "Zone",
         sub_label: proj.subLabel || "Building",
+        organization_id: org?.id || null,
         created_by: user.id,
       })
       .select()
@@ -594,7 +561,7 @@ export default function AppShell() {
               style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12, fontWeight: curProjId === p.id && page === "project" ? 600 : 400, background: curProjId === p.id && page === "project" ? T.text : "transparent", color: curProjId === p.id && page === "project" ? T.bg : T.textMuted, marginBottom: 2, textAlign: "left", fontFamily: F }}>
               <div style={{ width: 22, height: 22, borderRadius: 5, background: p.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "white", flexShrink: 0 }}>{p.icon}</div>
               <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
-              <span style={{ marginLeft: "auto", fontSize: 10, color: "#3A3A48", fontFamily: M }}>{p.tasks.filter((t) => t.status !== "resolved").length}</span>
+              <span style={{ marginLeft: "auto", fontSize: 10, color: "#3A3A48", fontFamily: M }}>{p.tasks.filter((t) => t.readiness_state !== "phase_ready").length}</span>
             </button>
           ))}
         </nav>
@@ -634,6 +601,7 @@ export default function AppShell() {
             <ProjectDetail
               project={curProj}
               userId={user.id}
+              orgId={org?.id}
               isPM={isUserPM(curProj)}
               permissions={{
                 canCreate: canCreate(curProj),

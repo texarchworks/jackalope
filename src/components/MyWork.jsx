@@ -22,10 +22,10 @@ export default function MyWork({ user, projects, goProj, goEditTask, onUpdateTas
   const my = [];
   projects.forEach((p) => p.tasks.filter((t) => t.assignee === user.id).forEach((t) => my.push({ ...t, _p: p })));
   const today = new Date().toISOString().split("T")[0];
-  const overdue = my.filter((t) => t.dueDate && t.dueDate < today && t.status !== "resolved");
-  const active = my.filter((t) => t.status !== "resolved");
+  const overdue = my.filter((t) => t.dueDate && t.dueDate < today && t.readiness_state !== "phase_ready");
+  const active = my.filter((t) => t.readiness_state !== "phase_ready");
   const bySta = {};
-  active.forEach((t) => { if (!bySta[t.status]) bySta[t.status] = []; bySta[t.status].push(t); });
+  active.forEach((t) => { if (!bySta[t.readiness_state]) bySta[t.readiness_state] = []; bySta[t.readiness_state].push(t); });
   const byProj = {};
   my.forEach((t) => { if (!byProj[t._p.id]) byProj[t._p.id] = { p: t._p, ts: [] }; byProj[t._p.id].ts.push(t); });
 
@@ -95,7 +95,7 @@ export default function MyWork({ user, projects, goProj, goEditTask, onUpdateTas
               <div key={t.id} style={{ display: "flex", alignItems: "center", padding: "6px 0", borderBottom: "1px solid #7f1d1d33", gap: 8 }}>
                 <span onClick={() => goEditTask(t._p.id, t)} style={{ fontSize: 12, fontWeight: 500, color: "#FECACA", cursor: "pointer", flex: 1 }}>{t.title}</span>
                 <span style={{ fontSize: 11, color: "#F87171", fontFamily: M }}>{t.dueDate}</span>
-                <ResolveBtn onClick={() => onUpdateTask(t._p.id, t.id, { status: "resolved" })} dark />
+                <ResolveBtn onClick={() => onUpdateTask(t._p.id, t.id, { readiness_state: "phase_ready" })} dark />
               </div>
             ))}
           </div>
@@ -123,7 +123,7 @@ export default function MyWork({ user, projects, goProj, goEditTask, onUpdateTas
                         </div>
                       </div>
                       <div style={{ position: "absolute", top: 7, right: 6 }}>
-                        <ResolveBtn onClick={() => onUpdateTask(t._p.id, t.id, { status: "resolved" })} />
+                        <ResolveBtn onClick={() => onUpdateTask(t._p.id, t.id, { readiness_state: "phase_ready" })} />
                       </div>
                     </div>
                   );
@@ -136,7 +136,7 @@ export default function MyWork({ user, projects, goProj, goEditTask, onUpdateTas
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>By Project</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 14 }}>
           {Object.values(byProj).map(({ p: proj, ts }) => {
-            const cr = ts.filter((t) => t.priority === "critical" && t.status !== "resolved").length;
+            const cr = ts.filter((t) => t.priority === "critical" && t.readiness_state !== "phase_ready").length;
             return (
               <div key={proj.id} onClick={() => goProj(proj.id)} style={{ background: "var(--t-card, #202020)", borderRadius: 10, border: "1px solid var(--t-border, #333)", overflow: "hidden", cursor: "pointer", transition: "border .15s" }}
                 onMouseEnter={(e) => e.currentTarget.style.borderColor = proj.color} onMouseLeave={(e) => e.currentTarget.style.borderColor = "var(--t-border, #333)"}>
@@ -146,11 +146,11 @@ export default function MyWork({ user, projects, goProj, goEditTask, onUpdateTas
                   {cr > 0 && <div style={{ background: "#E03E3E15", borderRadius: 6, padding: "3px 7px", fontSize: 10, color: "#E03E3E", fontWeight: 600 }}>▲ {cr}</div>}
                 </div>
                 <div style={{ padding: "8px 14px" }}>
-                  {ts.filter((t) => t.status !== "resolved").slice(0, 4).map((t) => (
+                  {ts.filter((t) => t.readiness_state !== "phase_ready").slice(0, 4).map((t) => (
                     <div key={t.id} style={{ padding: "5px 8px", borderLeft: `2px solid ${PRI[t.priority].color}`, marginBottom: 3, background: "var(--t-elevated, #252525)", borderRadius: "0 4px 4px 0", fontSize: 11, display: "flex", alignItems: "center", gap: 4 }}>
                       <span style={{ fontWeight: 500, flex: 1 }}>{t.title.length > 38 ? t.title.substring(0, 38) + "…" : t.title}</span>
                       <span style={{ color: PRI[t.priority].color, fontWeight: 600, fontSize: 10, flexShrink: 0 }}>{PRI[t.priority].label}</span>
-                      <ResolveBtn onClick={() => onUpdateTask(proj.id, t.id, { status: "resolved" })} />
+                      <ResolveBtn onClick={() => onUpdateTask(proj.id, t.id, { readiness_state: "phase_ready" })} />
                     </div>
                   ))}
                 </div>
@@ -185,7 +185,7 @@ export default function MyWork({ user, projects, goProj, goEditTask, onUpdateTas
             const dateStr = formatDate(day);
             const isToday = dateStr === today;
             const tasks = tasksByDate[dateStr] || [];
-            const hasOverdue = tasks.some((t) => t.status !== "resolved" && dateStr < today);
+            const hasOverdue = tasks.some((t) => t.readiness_state !== "phase_ready" && dateStr < today);
             return (
               <div key={day} style={{ minHeight: 100, background: "var(--t-card, #202020)", borderRadius: 4, padding: "6px 8px", border: isToday ? "1px solid #2F80ED" : "1px solid var(--t-border, #333)", position: "relative" }}>
                 <div style={{ fontSize: 12, fontWeight: isToday ? 700 : 400, color: isToday ? "#2F80ED" : hasOverdue ? "#E03E3E" : "var(--t-text, #FFF)", marginBottom: 4 }}>
@@ -194,7 +194,7 @@ export default function MyWork({ user, projects, goProj, goEditTask, onUpdateTas
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   {tasks.slice(0, 4).map((t) => {
-                    const isRes = t.status === "resolved";
+                    const isRes = t.readiness_state === "phase_ready";
                     const isOD = !isRes && dateStr < today;
                     return (
                       <div key={t.id} onClick={() => goEditTask(t._p.id, t)} style={{ fontSize: 10, padding: "2px 4px", borderRadius: 3, borderLeft: `2px solid ${PRI[t.priority].color}`, background: isRes ? "transparent" : isOD ? "#E03E3E15" : "var(--t-elevated, #252525)", color: isRes ? "var(--t-dim, #555)" : "var(--t-text, #FFF)", cursor: "pointer", textDecoration: isRes ? "line-through" : "none", opacity: isRes ? 0.4 : 1, lineHeight: 1.3, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>

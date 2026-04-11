@@ -13,7 +13,7 @@ export default function DrawingSet({ drawingSet, currentPhase, role, userId, onU
     const out = {};
     DRAWING_SET_PHASES.forEach(({ key }) => {
       const items = ds.phases[key] || [];
-      const allDone = items.length > 0 && items.every((i) => i.is_complete);
+      const allDone = items.length > 0 && items.every((i) => i.readiness_state === "phase_ready");
       out[key] = key === currentPhase ? true : !allDone;
     });
     return out;
@@ -24,7 +24,8 @@ export default function DrawingSet({ drawingSet, currentPhase, role, userId, onU
   const pct = ds.totalItems ? Math.round((ds.completedItems / ds.totalItems) * 100) : 0;
 
   const handleToggle = async (item) => {
-    await toggleDrawingSetItem(item.id, !item.is_complete, userId);
+    const isReady = item.readiness_state === "phase_ready";
+    await toggleDrawingSetItem(item.id, !isReady, userId);
     onUpdate();
   };
 
@@ -70,7 +71,7 @@ export default function DrawingSet({ drawingSet, currentPhase, role, userId, onU
       {DRAWING_SET_PHASES.map(({ key, label, color }) => {
         const items = ds.phases[key] || [];
         if (items.length === 0 && key !== currentPhase) return null;
-        const done = items.filter((i) => i.is_complete).length;
+        const done = items.filter((i) => i.readiness_state === "phase_ready").length;
         const isOpen = expanded[key];
 
         return (
@@ -93,13 +94,13 @@ export default function DrawingSet({ drawingSet, currentPhase, role, userId, onU
                   <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0" }}>
                     <input
                       type="checkbox"
-                      checked={item.is_complete}
+                      checked={item.readiness_state === "phase_ready"}
                       onChange={() => handleToggle(item)}
                       style={{ cursor: "pointer", accentColor: color }}
                     />
                     <span style={{
-                      fontSize: 12, color: item.is_complete ? T.textMuted : T.text,
-                      textDecoration: item.is_complete ? "line-through" : "none",
+                      fontSize: 12, color: item.readiness_state === "phase_ready" ? T.textMuted : T.text,
+                      textDecoration: item.readiness_state === "phase_ready" ? "line-through" : "none",
                       flex: 1,
                     }}>{item.name}</span>
                     {item.is_custom && (
