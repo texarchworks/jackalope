@@ -51,7 +51,7 @@ export default function usePermissions({ projectId, organizationId } = {}) {
           .select("org_role")
           .eq("org_id", resolvedOrgId)
           .eq("user_id", user.id)
-          .eq("status", "active")
+          .eq("is_active", true)
           .maybeSingle();
         if (!cancelled) setOrgRole(om?.org_role || null);
       } else {
@@ -62,7 +62,7 @@ export default function usePermissions({ projectId, organizationId } = {}) {
           .from("org_members")
           .select("org_role")
           .eq("user_id", user.id)
-          .eq("status", "active")
+          .eq("is_active", true)
           .limit(1)
           .maybeSingle();
         if (!cancelled) setOrgRole(anyMembership?.org_role || null);
