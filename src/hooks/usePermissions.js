@@ -51,9 +51,21 @@ export default function usePermissions({ projectId, organizationId } = {}) {
           .select("org_role")
           .eq("org_id", resolvedOrgId)
           .eq("user_id", user.id)
-          .neq("is_active", false)
-          .single();
+          .eq("status", "active")
+          .maybeSingle();
         if (!cancelled) setOrgRole(om?.org_role || null);
+      } else {
+        // Fallback: project has no organization_id (legacy projects), or no
+        // projectId was passed. Look up the user's org membership directly so
+        // org owners/admins still get elevated permissions.
+        const { data: anyMembership } = await supabase
+          .from("org_members")
+          .select("org_role")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle();
+        if (!cancelled) setOrgRole(anyMembership?.org_role || null);
       }
 
       if (!cancelled) setLoading(false);
