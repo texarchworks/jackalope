@@ -398,6 +398,11 @@ export default function AppShell() {
   };
 
   const createProject = async (proj) => {
+    if (!org?.id) {
+      console.error("createProject: no organization resolved for user", user?.id);
+      alert("Could not determine your organization");
+      return null;
+    }
     const { data, error } = await supabase
       .from("projects")
       .insert({
@@ -409,6 +414,7 @@ export default function AppShell() {
         loc_label: proj.locLabel || "Zone",
         sub_label: proj.subLabel || "Building",
         created_by: user.id,
+        organization_id: org.id,
       })
       .select()
       .single();
